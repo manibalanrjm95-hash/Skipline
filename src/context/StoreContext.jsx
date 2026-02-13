@@ -10,7 +10,18 @@ export const StoreProvider = ({ children }) => {
     const [cart, setCart] = useState([]); // Array of { product_id, quantity, subtotal }
     const [orders, setOrders] = useState([]);
     const [currentShop, setCurrentShop] = useState(null);
+    const [currentOrderId, setCurrentOrderId] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // V1 Status Constants
+    const STATUS = {
+        CART_ACTIVE: 'cart_active',
+        PENDING_PAYMENT: 'pending_payment',
+        AWAITING_VERIFICATION: 'awaiting_verification',
+        VERIFIED: 'verified',
+        EXITED: 'exited',
+        CANCELLED: 'cancelled'
+    };
 
     // Initial load and Session Restoration
     useEffect(() => {
@@ -46,6 +57,9 @@ export const StoreProvider = ({ children }) => {
 
                 if (savedUser) setUser(JSON.parse(savedUser));
                 if (savedShop) setCurrentShop(JSON.parse(savedShop));
+
+                const savedOrderId = localStorage.getItem('skipline_order_id');
+                if (savedOrderId) setCurrentOrderId(savedOrderId);
             } catch (error) {
                 console.error('Initialization error:', error);
             } finally {
@@ -69,6 +83,11 @@ export const StoreProvider = ({ children }) => {
         if (currentShop) localStorage.setItem('skipline_shop', JSON.stringify(currentShop));
         else localStorage.removeItem('skipline_shop');
     }, [currentShop]);
+
+    useEffect(() => {
+        if (currentOrderId) localStorage.setItem('skipline_order_id', currentOrderId);
+        else localStorage.removeItem('skipline_order_id');
+    }, [currentOrderId]);
 
     const loginShop = async (shopCode) => {
         try {
@@ -104,6 +123,7 @@ export const StoreProvider = ({ children }) => {
         setUser(null);
         setCart([]);
         setCurrentShop(null);
+        setCurrentOrderId(null);
         localStorage.clear();
     };
 
@@ -146,55 +166,92 @@ export const StoreProvider = ({ children }) => {
         setCart(newCart);
     };
 
-    const checkout = async () => {
+    const checkout = async (customerName = 'Guest') => {
         if (cart.length === 0) return { success: false, error: 'Cart is empty' };
 
         const totalAmount = cart.reduce((acc, item) => acc + item.subtotal, 0);
 
         try {
-            // Save order to Supabase
+            // Save order to Supabase with V1 initial status
             const { data: order, error } = await supabase
                 .from('orders')
                 .insert({
                     shop_id: currentShop.id,
-                    customer_name: 'Guest Customer',
+                    customer_name: customerName,
                     total_amount: totalAmount,
                     items: cart,
-                    status: 'paid'
+                    status: STATUS.PENDING_PAYMENT
                 })
                 .select()
                 .single();
 
             if (error) throw error;
 
-            // Update product stocks in Supabase
-            for (const item of cart) {
-                const product = products.find(p => p.id === item.product_id);
-                if (product) {
-                    await supabase
-                        .from('products')
-                        .update({ stock: Math.max(0, product.stock - item.quantity) })
-                        .eq('id', product.id);
-                }
-            }
-
-            // Refresh local product state
-            const { data: freshProducts } = await supabase.from('products').select('*');
-            if (freshProducts) setProducts(freshProducts);
-
-            const newOrder = {
-                ...order,
-                verification_status: 'pending',
-                exit_status: 'pending'
-            };
-
-            setOrders([...orders, newOrder]);
+            setCart([]); // Clear cart locally
+            setCurrentOrderId(order.id);
             setUser({ ...user, cart_status: 'checkout' });
-            setCart([]);
+
             return { success: true, orderId: order.id };
         } catch (err) {
             console.error('Checkout failed:', err);
             return { success: false, error: 'Payment processing failed. Please try again.' };
+        }
+    };
+
+    const updateOrderStatus = async (orderId, newStatus) => {
+        try {
+            const { data: order, error } = await supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', orderId)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // V1 Rule: Deduct stock ONLY when verified
+            if (newStatus === STATUS.VERIFIED) {
+                const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                for (const item of items) {
+                    const product = products.find(p => p.id === item.product_id);
+                    if (product) {
+                        await supabase
+                            .from('products')
+                            .update({ stock: Math.max(0, product.stock - item.quantity) })
+                            .eq('id', product.id);
+                    }
+                }
+                // Refresh products
+                const { data: freshProducts } = await supabase.from('products').select('*');
+                if (freshProducts) setProducts(freshProducts);
+            }
+
+            // Update local state if it matches current order
+            if (orderId === currentOrderId) {
+                // If exited, we might want to clear session eventually, 
+                // but for now just let the screens handle the state
+            }
+
+            return { success: true };
+        } catch (err) {
+            console.error('Update status failed:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const updateProduct = async (productId, updates) => {
+        try {
+            const { error } = await supabase
+                .from('products')
+                .update(updates)
+                .eq('id', productId);
+
+            if (error) throw error;
+
+            setProducts(products.map(p => p.id === productId ? { ...p, ...updates } : p));
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: err.message };
         }
     };
 
@@ -216,19 +273,7 @@ export const StoreProvider = ({ children }) => {
     };
 
     const verifyOrder = async (orderId) => {
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: 'verified' })
-            .eq('id', orderId);
-
-        if (!error) {
-            setOrders(orders.map(o => {
-                if (o.id === orderId) {
-                    return { ...o, status: 'verified', verification_status: 'verified', exit_status: 'completed' };
-                }
-                return o;
-            }));
-        }
+        return await updateOrderStatus(orderId, STATUS.VERIFIED);
     };
 
     const cartTotal = cart.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0);
@@ -236,9 +281,9 @@ export const StoreProvider = ({ children }) => {
 
     return (
         <StoreContext.Provider value={{
-            shops, products, user, cart, orders, currentShop, loading,
-            loginShop, logout, addToCart, updateQuantity, checkout, verifyOrder,
-            cartTotal, cartCount, setProducts, toggleProductStatus
+            shops, products, user, cart, orders, currentShop, currentOrderId, loading, STATUS,
+            loginShop, logout, addToCart, updateQuantity, checkout, verifyOrder, updateOrderStatus,
+            cartTotal, cartCount, setProducts, toggleProductStatus, updateProduct
         }}>
             {children}
         </StoreContext.Provider>

@@ -37,8 +37,10 @@ const Sidebar = () => (
 );
 
 const Inventory = () => {
-    const { products, toggleProductStatus, loading } = useStore();
+    const { products, toggleProductStatus, updateProduct, loading } = useStore();
     const [searchTerm, setSearchTerm] = useState('');
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [editForm, setEditForm] = useState({ price: 0, stock: 0 });
 
     if (loading) {
         return (
@@ -47,6 +49,24 @@ const Inventory = () => {
             </div>
         );
     }
+
+    const handleEdit = (product) => {
+        setEditingProduct(product);
+        setEditForm({ price: product.price, stock: product.stock });
+    };
+
+    const handleSave = async () => {
+        if (!editingProduct) return;
+        const result = await updateProduct(editingProduct.id, {
+            price: Number(editForm.price),
+            stock: Number(editForm.stock)
+        });
+        if (result.success) {
+            setEditingProduct(null);
+        } else {
+            alert('Failed to update product: ' + result.error);
+        }
+    };
 
     const filteredProducts = products.filter(p =>
         p.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,9 +82,6 @@ const Inventory = () => {
                         <h1 className="font-extrabold text-grey-900">Inventory Control</h1>
                         <p className="body-sm text-grey-500 font-medium">Manage product visibility, stock levels and digital identifiers.</p>
                     </div>
-                    <button className="btn btn-primary gap-2 py-4 px-8 shadow-lg">
-                        <Plus size={20} /> New Product
-                    </button>
                 </div>
 
                 <div className="card-premium glass mb-10">
@@ -79,14 +96,6 @@ const Inventory = () => {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <div className="flex gap-3">
-                            <button className="btn glass gap-2 border-white shadow-sm px-6">
-                                <Filter size={18} /> Category
-                            </button>
-                            <button className="btn glass gap-2 border-white shadow-sm px-6">
-                                <MoreVertical size={18} /> Batch Actions
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -97,7 +106,6 @@ const Inventory = () => {
                                 <th className="px-6 py-4">PRODUCT DETAILS</th>
                                 <th className="px-6 py-4">PRICING</th>
                                 <th className="px-6 py-4">STOCK STATUS</th>
-                                <th className="px-6 py-4">AVAILABILITY</th>
                                 <th className="px-6 py-4 text-center">CONTROLS</th>
                             </tr>
                         </thead>
@@ -122,22 +130,17 @@ const Inventory = () => {
                                     <td className="table-cell">
                                         <div className="flex flex-col gap-2" style={{ width: '160px' }}>
                                             <div className="flex justify-between items-center px-1">
-                                                <span className={`caption font-extrabold ${p.stock < 20 ? 'text-error' : 'text-success'}`}>
+                                                <span className={`caption font-extrabold ${p.stock < 10 ? 'text-error' : 'text-success'}`}>
                                                     {p.stock} Units left
                                                 </span>
                                             </div>
                                             <div className="progress-bar w-full bg-grey-100 rounded-full" style={{ height: '8px' }}>
                                                 <div
-                                                    className={`progress-fill rounded-full ${p.stock < 20 ? 'bg-error' : 'bg-success'}`}
+                                                    className={`progress-fill rounded-full ${p.stock < 10 ? 'bg-error' : 'bg-success'}`}
                                                     style={{ width: `${Math.min(100, p.stock)}%` }}
                                                 ></div>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className="table-cell">
-                                        <span className={`tag px-4 py-2 font-extrabold border-2 ${p.barcode_enabled ? 'tag-success border-[#00BA4A22]' : 'tag-error border-[#FF3B3022] shadow-none'}`}>
-                                            {p.barcode_enabled ? 'ACTIVE' : 'DISABLED'}
-                                        </span>
                                     </td>
                                     <td className="table-cell">
                                         <div className="flex items-center justify-center gap-3">
@@ -148,11 +151,11 @@ const Inventory = () => {
                                             >
                                                 {p.barcode_enabled ? <Eye size={20} /> : <EyeOff size={20} />}
                                             </button>
-                                            <button className="btn p-3 bg-grey-100 text-grey-500 rounded-xl hover:bg-primary hover:text-white">
+                                            <button
+                                                className="btn p-3 bg-grey-100 text-grey-500 rounded-xl hover:bg-primary hover:text-white transition-all"
+                                                onClick={() => handleEdit(p)}
+                                            >
                                                 <Edit3 size={20} />
-                                            </button>
-                                            <button className="btn p-3 bg-grey-100 text-error rounded-xl hover:bg-error hover:text-white">
-                                                <Trash2 size={20} />
                                             </button>
                                         </div>
                                     </td>
@@ -161,6 +164,48 @@ const Inventory = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {editingProduct && (
+                    <div className="fixed inset-0 bg-grey-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[100] animate-fade">
+                        <div className="card-premium bg-white w-full max-w-md flex flex-col gap-6 shadow-2xl p-8">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h2 className="font-extrabold text-grey-900">Edit Product</h2>
+                                    <p className="body-sm text-grey-500 font-medium">{editingProduct.product_name}</p>
+                                </div>
+                                <div className="bg-primary bg-opacity-10 p-2 rounded-xl text-primary">
+                                    <Package size={24} />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-col gap-2">
+                                    <label className="caption font-extrabold text-grey-500">UNIT PRICE (₹)</label>
+                                    <input
+                                        type="number"
+                                        className="input-field py-3 px-4 border rounded-xl font-bold text-grey-900 outline-none focus:border-primary"
+                                        value={editForm.price}
+                                        onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="caption font-extrabold text-grey-500">STOCK QUANTITY</label>
+                                    <input
+                                        type="number"
+                                        className="input-field py-3 px-4 border rounded-xl font-bold text-grey-900 outline-none focus:border-primary"
+                                        value={editForm.stock}
+                                        onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 mt-4">
+                                <button className="btn glass flex-1 py-4 text-grey-500 font-bold" onClick={() => setEditingProduct(null)}>Cancel</button>
+                                <button className="btn btn-primary flex-1 py-4 text-lg" onClick={handleSave}>Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

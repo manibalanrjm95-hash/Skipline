@@ -7,18 +7,19 @@ const Checkout = () => {
     const { cartTotal, checkout } = useStore();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [customerName, setCustomerName] = useState('Guest');
 
     const handlePayment = async () => {
         setLoading(true);
         try {
-            const result = await checkout();
+            const result = await checkout(customerName);
             if (result.success) {
-                navigate('/exit', { state: { orderId: result.orderId } });
+                navigate('/payment-method');
             } else {
-                alert(result.error); // Basic fallback for checkout errors
+                alert(result.error);
             }
         } catch (err) {
-            console.error('Payment error:', err);
+            console.error('Checkout error:', err);
         } finally {
             setLoading(false);
         }
@@ -45,7 +46,7 @@ const Checkout = () => {
                     <div className="flex flex-col gap-3">
                         <div className="flex justify-between items-center text-grey-500">
                             <p className="body-sm font-medium">Subtotal</p>
-                            <p className="body-sm font-bold text-grey-900">₹{cartTotal.toFixed(2)}</p>
+                            <p className="body-sm font-bold text-grey-900">₹{Number(cartTotal || 0).toFixed(2)}</p>
                         </div>
                         <div className="flex justify-between items-center text-grey-500">
                             <p className="body-sm font-medium">Processing Fee</p>
@@ -54,29 +55,28 @@ const Checkout = () => {
                         <div className="border-b" style={{ borderStyle: 'dashed' }}></div>
                         <div className="flex justify-between items-center py-2">
                             <p className="body-lg font-bold text-grey-900">Total Amount</p>
-                            <h2 className="text-primary font-extrabold">₹{cartTotal.toFixed(2)}</h2>
+                            <h2 className="text-primary font-extrabold">₹{Number(cartTotal || 0).toFixed(2)}</h2>
                         </div>
                     </div>
                 </div>
 
                 <div className="card glass flex flex-col gap-4 mb-8">
-                    <p className="caption text-grey-500 font-bold">PAYMENT OPTION</p>
-                    <div className="flex items-center gap-4 p-4 bg-blue-light rounded-xl" style={{ border: '2px solid var(--color-secondary)' }}>
-                        <div className="p-3 bg-secondary rounded-lg text-white shadow-md">
-                            <CreditCard size={24} />
-                        </div>
-                        <div className="flex-1">
-                            <p className="body-sm font-extrabold text-grey-900">SkipLine QuickPay</p>
-                            <p className="caption text-grey-500 font-medium">Verified Wallet Balance: ₹5,000.00</p>
-                        </div>
-                        <CheckCircle size={24} className="text-secondary" />
+                    <p className="caption text-grey-500 font-bold ml-1 uppercase">Customer Details</p>
+                    <div className="input-field bg-white px-4 py-1 border rounded-2xl flex items-center">
+                        <input
+                            type="text"
+                            className="w-full py-3 bg-transparent outline-none font-bold text-grey-900"
+                            placeholder="Customer Name (Optional)"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                        />
                     </div>
                 </div>
 
                 <div className="mt-auto flex flex-col gap-6">
                     <div className="flex items-center justify-center gap-2 text-grey-400">
                         <Lock size={16} />
-                        <p className="caption font-bold">256-BIT SSL SECURED ENCRYPTION</p>
+                        <p className="caption font-bold uppercase tracking-wider">Finalize Selection</p>
                     </div>
 
                     <button
@@ -87,16 +87,16 @@ const Checkout = () => {
                         {loading ? (
                             <div className="flex items-center gap-3">
                                 <Loader2 className="animate-spin" size={24} />
-                                <span>Verifying...</span>
+                                <span>Processing...</span>
                             </div>
                         ) : (
-                            `Pay ₹${cartTotal.toFixed(2)}`
+                            "Confirm Order"
                         )}
                     </button>
 
                     <div className="flex items-center justify-center gap-2 opacity-50">
                         <ShieldCheck size={16} />
-                        <span className="caption font-medium">Guaranteed by SkipLine Trust</span>
+                        <span className="caption font-medium uppercase tracking-widest">SkipLine Core V1</span>
                     </div>
                 </div>
             </div>

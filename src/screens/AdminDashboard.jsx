@@ -29,15 +29,68 @@ const Sidebar = () => (
         </div>
 
         <div className="mt-auto pt-6 border-t" style={{ borderStyle: 'dashed' }}>
-            <Link to="/" className="btn btn-outline w-full gap-2 border-grey-100">
+            <Link to="/" className="btn btn-outline w-full gap-2 border-grey-100 mb-2">
                 <Users size={18} /> Exit Admin
             </Link>
+            <button
+                onClick={() => {
+                    sessionStorage.removeItem('skipline_isAdmin');
+                    window.location.href = '/admin/login';
+                }}
+                className="btn btn-primary w-full gap-2"
+            >
+                Log Out
+            </button>
         </div>
     </div>
 );
 
 const AdminDashboard = () => {
-    const { orders, products, loading } = useStore();
+    const { products, updateOrderStatus, STATUS, loading } = useStore();
+    const [liveOrders, setLiveOrders] = useState([]);
+    const [stats, setStats] = useState({ revenue: 0, count: 0 });
+    const [refreshLoading, setRefreshLoading] = useState(false);
+
+    const fetchLiveOrders = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .in('status', [STATUS.PENDING_PAYMENT, STATUS.AWAITING_VERIFICATION, STATUS.VERIFIED])
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setLiveOrders(data || []);
+
+            // Calculate basic stats for today
+            const today = new Date().toISOString().split('T')[0];
+            const { data: todayData } = await supabase
+                .from('orders')
+                .select('total_amount')
+                .gte('created_at', today)
+                .in('status', [STATUS.VERIFIED, STATUS.EXITED]);
+
+            if (todayData) {
+                const revenue = todayData.reduce((acc, o) => acc + o.total_amount, 0);
+                setStats({ revenue, count: todayData.length });
+            }
+        } catch (err) {
+            console.error('Fetch live orders error:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchLiveOrders();
+        const interval = setInterval(fetchLiveOrders, 5000); // 5s Polling for V1
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleAction = async (orderId, newStatus) => {
+        setRefreshLoading(true);
+        await updateOrderStatus(orderId, newStatus);
+        await fetchLiveOrders();
+        setRefreshLoading(false);
+    };
 
     if (loading) {
         return (
@@ -47,16 +100,11 @@ const AdminDashboard = () => {
         );
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const todaysOrders = orders.filter(o => o.created_at && o.created_at.startsWith(today));
-    const todaysRevenue = todaysOrders.reduce((acc, o) => acc + o.total_amount, 0);
-    const lowStockAlerts = products.filter(p => p.stock < 20).slice(0, 2);
-
     const metrics = [
-        { label: 'Active Sessions', value: '4', icon: Users, color: 'var(--color-secondary)', bg: 'var(--color-secondary-glow)' },
-        { label: "Today's Revenue", value: `₹${todaysRevenue.toLocaleString()}`, icon: TrendingUp, color: 'var(--success)', bg: 'rgba(0, 186, 74, 0.1)' },
-        { label: 'Total Orders', value: orders.length.toString(), icon: ShoppingCart, color: 'var(--color-primary)', bg: 'var(--color-primary-glow)' },
-        { label: 'Avg. Order', value: orders.length ? `₹${(orders.reduce((acc, o) => acc + o.total_amount, 0) / orders.length).toFixed(0)}` : '₹0', icon: Clock, color: 'var(--warning)', bg: 'rgba(255, 204, 0, 0.1)' },
+        { label: 'Live Orders', value: liveOrders.length.toString(), icon: Users, color: 'var(--color-secondary)', bg: 'var(--color-secondary-glow)' },
+        { label: "Today's Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: TrendingUp, color: 'var(--success)', bg: 'rgba(0, 186, 74, 0.1)' },
+        { label: 'Total Verified', value: stats.count.toString(), icon: ShoppingCart, color: 'var(--color-primary)', bg: 'var(--color-primary-glow)' },
+        { label: 'Low Stock', value: products.filter(p => p.stock < 10).length.toString(), icon: AlertCircle, color: 'var(--warning)', bg: 'rgba(255, 204, 0, 0.1)' },
     ];
 
     return (
@@ -99,68 +147,111 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="flex gap-8">
-                    <div className="card-premium flex-[2] flex flex-col gap-8">
+                    <div className="card-premium flex-[2] flex flex-col gap-8 min-h-[500px]">
                         <div className="flex justify-between items-center">
-                            <h3 className="font-extrabold text-grey-900">Live Shopping Sessions</h3>
-                            <button className="btn glass p-2 rounded-lg text-primary">
-                                <ChevronRight size={20} />
+                            <div className="flex items-center gap-3">
+                                <h3 className="font-extrabold text-grey-900">Live Orders Queue</h3>
+                                <span className="tag px-3 py-1 bg-primary text-white rounded-full text-[10px] font-bold animate-pulse">
+                                    {liveOrders.filter(o => o.status !== STATUS.VERIFIED).length} NEW
+                                </span>
+                            </div>
+                            <button className="btn glass p-2 rounded-lg text-primary" onClick={fetchLiveOrders}>
+                                <Clock size={20} className={refreshLoading ? 'animate-spin' : ''} />
                             </button>
                         </div>
+
                         <div className="flex flex-col gap-4">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="flex justify-between items-center p-5 bg-grey-100 bg-opacity-50 rounded-2xl border border-white hover:bg-white hover:shadow-sm transition-all cursor-pointer">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-white p-3 rounded-xl shadow-sm border border-grey-100">
-                                            <Users size={24} className="text-secondary" />
+                            {liveOrders.length > 0 ? liveOrders.map((order) => {
+                                const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                                return (
+                                    <div key={order.id} className="flex flex-col p-6 bg-grey-100 bg-opacity-50 rounded-2xl border border-white hover:bg-white hover:shadow-sm transition-all group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="bg-white p-3 rounded-xl shadow-sm border border-grey-100">
+                                                    <Users size={24} className="text-secondary" />
+                                                </div>
+                                                <div>
+                                                    <p className="body-sm font-extrabold text-grey-900">{order.customer_name || 'Guest Customer'}</p>
+                                                    <p className="caption text-grey-500 font-medium">#{order.id.slice(-8).toUpperCase()} • {new Date(order.created_at).toLocaleTimeString()}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className={`tag px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest mb-1 ${order.status === STATUS.AWAITING_VERIFICATION ? 'bg-warning text-white' :
+                                                        order.status === STATUS.VERIFIED ? 'bg-success text-white' : 'bg-grey-400 text-white'
+                                                    }`}>
+                                                    {order.status.replace('_', ' ')}
+                                                </span>
+                                                <p className="text-lg font-extrabold text-primary">₹{order.total_amount.toFixed(2)}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="body-sm font-extrabold text-grey-900">Terminal US-{i}482</p>
-                                            <p className="caption text-grey-500 font-medium italic">Urapakkam Branch • {i * 2 + 1} items</p>
+
+                                        <div className="flex flex-wrap gap-2 mb-6 p-3 bg-white bg-opacity-40 rounded-xl border border-dashed border-grey-200">
+                                            {items.map((item, idx) => (
+                                                <span key={idx} className="caption font-bold text-grey-500 bg-grey-100 px-2 py-1 rounded-md">
+                                                    {item.quantity}x {item.product_name}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex gap-4">
+                                            {order.status === STATUS.VERIFIED ? (
+                                                <button
+                                                    className="btn btn-secondary flex-1 py-3 text-white gap-2"
+                                                    onClick={() => handleAction(order.id, STATUS.EXITED)}
+                                                >
+                                                    <Zap size={18} /> Allow Exit
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        className="btn btn-primary flex-1 py-3 gap-2"
+                                                        onClick={() => handleAction(order.id, STATUS.VERIFIED)}
+                                                    >
+                                                        <ShieldCheck size={18} /> Mark as Verified
+                                                    </button>
+                                                    <button
+                                                        className="btn glass flex-1 py-3 text-error border-error border-opacity-20 gap-2"
+                                                        style={{ background: 'rgba(255, 59, 48, 0.05)' }}
+                                                        onClick={() => handleAction(order.id, STATUS.CANCELLED)}
+                                                    >
+                                                        <AlertCircle size={18} /> Cancel
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="bg-success animate-pulse" style={{ width: '8px', height: '8px', borderRadius: '50%' }}></div>
-                                            <span className="caption font-extrabold text-success">SCANNING</span>
-                                        </div>
-                                        <p className="body-sm font-bold text-primary">₹{(i * 1240.5).toFixed(2)}</p>
-                                    </div>
+                                );
+                            }) : (
+                                <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                                    <ShoppingCart size={64} className="mb-4" />
+                                    <p className="font-extrabold uppercase tracking-widest">No Active Orders</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 
                     <div className="card-premium flex-1 flex flex-col gap-6 border-l-4 border-l-primary">
                         <div className="flex items-center gap-3">
                             <AlertCircle size={24} className="text-error" />
-                            <h3 className="font-extrabold text-grey-900">Stock Alerts</h3>
+                            <h3 className="font-extrabold text-grey-900">Inventory Status</h3>
                         </div>
                         <div className="flex flex-col gap-4">
-                            {lowStockAlerts.length > 0 ? lowStockAlerts.map((alert, i) => (
-                                <div key={i} className={`flex flex-col gap-2 p-4 ${alert.stock < 5 ? 'bg-error-light' : 'bg-warning-light'} rounded-2xl border border-white`}>
+                            {products.filter(p => p.stock < 10).slice(0, 5).map((p, i) => (
+                                <div key={i} className={`flex flex-col gap-2 p-4 ${p.stock < 5 ? 'bg-error-light' : 'bg-warning-light'} rounded-2xl border border-white`}>
                                     <div className="flex justify-between">
-                                        <p className={`caption font-extrabold ${alert.stock < 5 ? 'text-error' : 'text-warning'}`}>
-                                            {alert.stock < 5 ? 'CRITICAL STOCK' : 'LOW STOCK'}
+                                        <p className={`caption font-extrabold ${p.stock < 5 ? 'text-error' : 'text-warning'}`}>
+                                            {p.stock < 5 ? 'CRITICAL' : 'LOW STOCK'}
                                         </p>
-                                        <span className="caption font-bold text-grey-700">{alert.stock} left</span>
+                                        <span className="caption font-bold text-grey-700">{p.stock} left</span>
                                     </div>
-                                    <p className="body-sm font-bold text-grey-900">{alert.product_name}</p>
-                                    <div className="progress-bar w-full mt-2" style={{ height: '6px' }}>
-                                        <div
-                                            className={`progress-fill ${alert.stock < 5 ? 'bg-error' : 'bg-warning'}`}
-                                            style={{ width: `${Math.min(100, (alert.stock / 20) * 100)}%` }}
-                                        ></div>
-                                    </div>
+                                    <p className="body-sm font-bold text-grey-900">{p.product_name}</p>
                                 </div>
-                            )) : (
-                                <div className="p-8 text-center bg-grey-100 rounded-2xl border border-dashed">
-                                    <p className="caption text-grey-400 font-bold">ALL STOCK NORMAL</p>
-                                </div>
-                            )}
+                            ))}
                         </div>
-                        <button className="btn btn-primary w-full mt-auto shadow-md">Create Restock Order</button>
+                        <Link to="/admin/inventory" className="btn btn-primary w-full mt-auto shadow-md">Manage Inventory</Link>
                     </div>
                 </div>
+
             </div>
         </div>
     );
