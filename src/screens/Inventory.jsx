@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, Search, Plus, Edit3, Trash2, Eye, EyeOff, Zap, Filter, MoreVertical, Loader2, QrCode } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, Search, Plus, Edit3, Trash2, Eye, EyeOff, Zap, Filter, MoreVertical, Loader2, QrCode, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { supabase } from '../lib/supabase';
 
 const Sidebar = () => (
     <div className="sidebar shadow-lg">

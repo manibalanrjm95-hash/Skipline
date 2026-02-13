@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, Users, ShoppingCart, TrendingUp, Clock, AlertCircle, Zap, ChevronRight, Loader2, QrCode } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, Users, ShoppingCart, TrendingUp, Clock, AlertCircle, Zap, ChevronRight, Loader2, QrCode, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { supabase } from '../lib/supabase';
 
 const Sidebar = () => (
     <div className="sidebar shadow-lg">
@@ -177,7 +178,7 @@ const AdminDashboard = () => {
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <span className={`tag px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest mb-1 ${order.status === STATUS.AWAITING_VERIFICATION ? 'bg-warning text-white' :
-                                                        order.status === STATUS.VERIFIED ? 'bg-success text-white' : 'bg-grey-400 text-white'
+                                                    order.status === STATUS.VERIFIED ? 'bg-success text-white' : 'bg-grey-400 text-white'
                                                     }`}>
                                                     {order.status.replace('_', ' ')}
                                                 </span>

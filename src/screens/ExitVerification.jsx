@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { QrCode, Download, Share2, CheckCircle, Zap, ShieldCheck } from 'lucide-react';
+import { QrCode, Download, Share2, CheckCircle, Zap, ShieldCheck, Loader2 } from 'lucide-react';
+import { useStore } from '../context/StoreContext';
+import { supabase } from '../lib/supabase';
 
 const ExitVerification = () => {
     const location = useLocation();
