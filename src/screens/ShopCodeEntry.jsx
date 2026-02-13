@@ -30,83 +30,77 @@ const ShopCodeEntry = () => {
     };
 
     return (
-        <div className="app-container justify-center relative">
-            <div className="absolute top-0 left-0 w-full h-[40vh] bg-gradient-to-b from-grey-200 to-transparent -z-10"></div>
-
-            <div className="screen-padding w-full">
+        <div className="m3-scaffold items-center">
+            <header className="m3-top-app-bar w-full">
                 <button
-                    className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-grey-900 mb-8 hover:scale-105 transition-transform"
+                    className="w-10 h-10 flex items-center justify-center state-layer rounded-full"
                     onClick={() => navigate('/')}
                 >
                     <ArrowLeft size={24} />
                 </button>
+            </header>
 
-                <div className="mb-10 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-sm mb-6 text-primary border border-grey-100">
+            <main className="m3-content w-full max-w-sm flex flex-col items-center">
+                <div className="mb-10 text-center flex flex-col items-center">
+                    <div className="m3-card card-filled w-16 h-16 flex items-center justify-center mb-6 text-primary">
                         <Store size={32} />
                     </div>
-                    <h2 className="text-h1 text-grey-900 mb-3">Which Store?</h2>
-                    <p className="body-md text-grey-500">Enter the unique code found at the store entrance.</p>
+                    <h2 className="headline-medium text-grey-900 mb-2">Find your store</h2>
+                    <p className="body-large text-grey-600">Enter the identifier for this location.</p>
                 </div>
 
-                <div className="card-premium relative overflow-hidden">
-                    {/* Decor */}
-                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
-
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 relative z-10">
-                        <div className="flex flex-col gap-3">
-                            <label className="caption ml-1">Store Code</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="SL-00-000"
-                                    value={code}
-                                    onChange={(e) => {
-                                        setCode(e.target.value.toUpperCase());
-                                        setError('');
-                                    }}
-                                    className={`input-field text-center tracking-widest text-2xl uppercase ${error ? 'border-error bg-error-bg/10' : 'focus:border-primary'}`}
-                                    autoFocus
-                                    maxLength={10}
-                                />
-                                {error && (
-                                    <div className="absolute -bottom-8 left-0 w-full text-center flex items-center justify-center gap-2 text-error animate-slide-up">
-                                        <AlertCircle size={16} />
-                                        <span className="text-sm font-bold">{error}</span>
-                                    </div>
-                                )}
-                            </div>
+                <div className="m3-card card-elevated w-full relative overflow-hidden p-8">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+                        <div className="space-y-2">
+                            <label className="label-medium text-grey-500 uppercase tracking-widest ml-1">Store Identity</label>
+                            <input
+                                type="text"
+                                placeholder="SL-00-000"
+                                className={`m3-text-field text-center text-3xl font-bold uppercase ${error ? 'border-error' : ''}`}
+                                value={code}
+                                onChange={(e) => {
+                                    setCode(e.target.value.toUpperCase());
+                                    setError('');
+                                }}
+                                autoFocus
+                                maxLength={10}
+                            />
+                            {error && (
+                                <div className="flex items-center justify-center gap-2 text-md-sys-color-error mt-2">
+                                    <AlertCircle size={14} />
+                                    <span className="label-medium font-bold">{error}</span>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="mt-4">
-                            <button
-                                type="submit"
-                                className="btn btn-primary w-full py-4 text-lg shadow-lg"
-                                disabled={loading || !code}
-                            >
-                                {loading ? <Loader2 size={24} className="animate-spin" /> : 'Enter Shop'}
-                            </button>
-                        </div>
+                        <button
+                            type="submit"
+                            className="m3-btn btn-filled w-full h-14 shadow-lg"
+                            disabled={loading || !code}
+                        >
+                            {loading ? <Loader2 size={24} className="animate-spin" /> : 'ACCESS STORE'}
+                        </button>
                     </form>
                 </div>
 
-                {/* Nearby Store Pill */}
-                <div className="mt-12 flex justify-center">
+                {/* Nearby Store Suggestion as a Chip/Card */}
+                <div className="mt-12 w-full">
+                    <p className="label-medium text-grey-500 text-center mb-4 uppercase tracking-widest">Closest to you</p>
                     <button
-                        className="card-floating hover:scale-105 transition-transform group pr-2"
+                        className="m3-card card-outlined w-full flex items-center gap-4 state-layer"
                         onClick={() => setCode('SL-TN-001')}
                     >
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary mr-3">
-                            <MapPin size={20} />
+                        <div className="w-12 h-12 bg-md-sys-color-primary-container rounded-lg flex items-center justify-center text-primary">
+                            <MapPin size={24} />
                         </div>
-                        <div className="text-left mr-4">
-                            <p className="text-sm font-bold text-grey-900">Nearby: Urapakkam</p>
-                            <p className="text-xs text-grey-500 font-medium">SL-TN-001</p>
+                        <div className="text-left flex-1 min-w-0">
+                            <p className="title-small text-grey-900 font-bold truncate">SkipLine Urapakkam</p>
+                            <p className="label-medium text-grey-500 uppercase tracking-wider">SL-TN-001</p>
                         </div>
-                        <ChevronRight size={18} className="text-grey-300 group-hover:text-primary transition-colors" />
+                        <ChevronRight size={20} className="text-grey-300" />
                     </button>
                 </div>
-            </div>
+            </main>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Lock, User, ArrowRight, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const AdminLogin = () => {
@@ -8,7 +8,6 @@ const AdminLogin = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { loginAdmin } = useStore();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -17,8 +16,6 @@ const AdminLogin = () => {
         setLoading(true);
 
         try {
-            // V1 Auth Logic: Simulation matching the original implementation
-            // admin / admin123
             await new Promise(resolve => setTimeout(resolve, 800));
             if (email === 'admin' && password === 'admin123') {
                 sessionStorage.setItem('skipline_isAdmin', 'true');
@@ -33,37 +30,42 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="app-container justify-center relative overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-grey-900 via-grey-800 to-transparent -z-10"></div>
-            <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+        <div className="m3-scaffold justify-center items-center">
+            <header className="absolute top-0 left-0 w-full p-6">
+                <button
+                    className="label-medium text-grey-500 hover:text-primary transition-all uppercase tracking-widest font-bold"
+                    onClick={() => navigate('/')}
+                >
+                    Back to Store
+                </button>
+            </header>
 
-            <div className="screen-padding w-full relative z-10">
-                <div className="mb-10 text-center">
-                    <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-2xl border border-white/20">
-                        <ShieldCheck size={40} className="text-white" />
+            <main className="m3-content w-full max-w-sm">
+                <div className="text-center mb-10 flex flex-col items-center">
+                    <div className="m3-card card-filled w-20 h-20 flex items-center justify-center mb-6 text-primary" style={{ borderRadius: '28px' }}>
+                        <ShieldCheck size={40} />
                     </div>
-                    <h1 className="text-display text-white mb-2">Admin Portal</h1>
-                    <p className="body-md text-grey-400">Secure access for store managers.</p>
+                    <h1 className="headline-medium text-grey-900 mb-2">Admin Portal</h1>
+                    <p className="body-large text-grey-600">Secure store management access</p>
                 </div>
 
-                <div className="card-premium bg-white shadow-xl border-none">
+                <div className="m3-card card-elevated p-8">
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                         {error && (
-                            <div className="p-4 bg-error-bg rounded-xl flex items-center gap-3 text-error text-sm font-bold animate-fade-in">
-                                <AlertCircle size={20} />
-                                {error}
+                            <div className="m3-chip bg-md-sys-color-error-container text-md-sys-color-on-error-container border-none h-auto p-4 flex items-center gap-3">
+                                <AlertCircle size={20} className="shrink-0" />
+                                <span className="label-medium font-bold">{error}</span>
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <label className="caption ml-1">Username</label>
+                            <label className="label-medium text-grey-500 uppercase tracking-widest ml-1">Username</label>
                             <div className="relative">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-grey-400" size={20} />
                                 <input
                                     type="text"
                                     placeholder="Enter username"
-                                    className="input-field pl-12"
+                                    className="m3-text-field pl-12"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
@@ -72,13 +74,13 @@ const AdminLogin = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="caption ml-1">Password</label>
+                            <label className="label-medium text-grey-500 uppercase tracking-widest ml-1">Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-grey-400" size={20} />
                                 <input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="input-field pl-12"
+                                    className="m3-text-field pl-12"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
@@ -88,28 +90,25 @@ const AdminLogin = () => {
 
                         <button
                             type="submit"
-                            className="btn btn-primary w-full py-4 text-lg shadow-primary flex justify-between items-center px-6 mt-2 group"
+                            className="m3-btn btn-filled w-full h-16 text-lg font-bold shadow-lg mt-4"
                             disabled={loading}
                         >
-                            <span className="font-bold">{loading ? 'Verifying...' : 'Login to Dashboard'}</span>
-                            {!loading && <div className="bg-white/20 p-2 rounded-full group-hover:bg-white/30 transition-colors"><ArrowRight size={20} /></div>}
+                            {loading ? (
+                                <Loader2 size={24} className="animate-spin" />
+                            ) : (
+                                <>
+                                    <span>LOGIN TO DASHBOARD</span>
+                                    <ArrowRight size={20} className="ml-4" />
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>
 
-                <div className="mt-8 text-center">
-                    <button
-                        className="text-sm font-bold text-grey-500 hover:text-white transition-colors"
-                        onClick={() => navigate('/')}
-                    >
-                        Back to Store
-                    </button>
-                </div>
-            </div>
-
-            <div className="absolute bottom-6 left-0 w-full text-center">
-                <p className="text-[10px] font-bold text-grey-600 uppercase tracking-widest opacity-50">Secured with 256-bit Encryption</p>
-            </div>
+                <p className="label-medium text-grey-400 text-center mt-12 uppercase tracking-[0.2em]">
+                    SkipLine Security Enforcement
+                </p>
+            </main>
         </div>
     );
 };
