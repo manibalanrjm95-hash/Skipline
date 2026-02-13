@@ -20,13 +20,15 @@ const PaymentMethod = () => {
             vpa: currentShop?.vpa,
             name: currentShop?.shop_name,
             amount: cartTotal,
-            orderId: currentOrderId
+            orderId: currentOrderId,
+            appId: app.id
         });
 
         if (intent) {
             launchUPIIntent(intent);
             // After launching intent, go to verification screen
-            setTimeout(() => navigate('/payment-qr'), 1000);
+            // Use longer timeout to ensure intent is processed
+            setTimeout(() => navigate('/payment-qr'), 2000);
         } else {
             navigate('/payment-qr');
         }
