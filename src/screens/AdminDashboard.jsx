@@ -83,7 +83,7 @@ const AdminDashboard = () => {
     ];
 
     return (
-        <div className="flex bg-grey-50 min-h-screen">
+        <div className="admin-layout flex bg-grey-50 min-h-screen">
             <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             <div className="ml-64 flex-1 p-10 animate-fade-in transition-all duration-300">

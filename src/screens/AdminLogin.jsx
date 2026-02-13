@@ -16,23 +16,14 @@ const AdminLogin = () => {
         setError('');
         setLoading(true);
 
-        // Simulate login for now or use actual auth if available
-        // The original code had hardcoded check, but we should use the store action if possible
-        // For consistency with previous step, I'll use loginAdmin from store if it exists (which it should based on other files)
-        // If not, I'll fallback to the hardcoded check from the file I read.
-
-        // Actually, the file I read used local state login. I will switch to useStore for consistency if applicable, but 
-        // looking at AdminDashboard it uses useStore. Let's assume loginAdmin exists or I'll reimplement the simple check 
-        // but cleaner.
-
         try {
-            // Mock auth for V1/Demo or call store
+            // V1 Auth Logic: Simulation matching the original implementation
+            // admin / admin123
+            await new Promise(resolve => setTimeout(resolve, 800));
             if (email === 'admin' && password === 'admin123') {
-                // Success
-                await new Promise(resolve => setTimeout(resolve, 800)); // Fake variable delay
+                sessionStorage.setItem('skipline_isAdmin', 'true');
                 navigate('/admin');
             } else {
-                await new Promise(resolve => setTimeout(resolve, 800));
                 setError('Invalid credentials. Try admin / admin123');
             }
         } catch (err) {
