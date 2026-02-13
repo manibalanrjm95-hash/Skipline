@@ -1,40 +1,34 @@
 /**
- * Generates a specific UPI intent URI for mobile deep linking.
- * Supports targeted apps for higher reliability.
+ * Generates a standard UPI intent URI for mobile deep linking.
+ * Format: upi://pay?pa={UPI_ID}&pn={PAYEE_NAME}&am={AMOUNT}&cu=INR&tn={NOTE}
  */
-export const getUPIIntent = ({ vpa, name, amount, orderId, appId }) => {
+export const getUPIIntent = ({ vpa, shopName, amount, orderId }) => {
     if (!vpa) return null;
 
-    const params = new URLSearchParams({
-        pa: vpa,
-        pn: name,
-        am: Number(amount).toFixed(2),
-        tn: `Order ${orderId}`,
-        cu: 'INR'
-    });
+    const formattedAmount = Number(amount).toFixed(2);
+    const encodedPayeeName = encodeURIComponent(shopName);
+    const encodedNote = encodeURIComponent(`SkipLine Order ${orderId}`);
 
-    const queryString = params.toString();
-
-    // App-specific schemes for better reliability
-    switch (appId) {
-        case 'gpay':
-            return `tez://upi/pay?${queryString}`;
-        case 'phonepe':
-            return `phonepe://pay?${queryString}`;
-        case 'paytm':
-            return `paytmmp://pay?${queryString}`;
-        default:
-            return `upi://pay?${queryString}`;
-    }
+    // Exact format as per user specification
+    return `upi://pay?pa=${vpa}&pn=${encodedPayeeName}&am=${formattedAmount}&cu=INR&tn=${encodedNote}`;
 };
 
-export const launchUPIIntent = (intentUrl) => {
-    if (!intentUrl) return;
+/**
+ * Standard redirection function as per user SECTION 4
+ */
+export const redirectToUPI = (shop, order) => {
+    const upiId = shop.vpa; // Mapping vpa to upiId
+    const amount = Number(order.total_amount || order.amount).toFixed(2);
+    const payeeName = encodeURIComponent(shop.shop_name);
+    const note = encodeURIComponent(`SkipLine Order ${order.id}`);
 
-    // Create a temporary anchor to trigger the link, 
-    // which is more reliable in some mobile browsers than window.location
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=INR&tn=${note}`;
+
+    console.log('UPI Redirect URL:', upiUrl);
+
+    // Triggering via dynamic anchor for better reliability
     const link = document.createElement('a');
-    link.href = intentUrl;
+    link.href = upiUrl;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

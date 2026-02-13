@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, QrCode, CreditCard, ChevronRight, Zap, X } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { getUPIIntent, launchUPIIntent } from '../utils/UPIIntentHandler';
+import { getUPIIntent, redirectToUPI } from '../utils/UPIIntentHandler';
 
 const PaymentMethod = () => {
     const navigate = useNavigate();
@@ -16,19 +16,26 @@ const PaymentMethod = () => {
     ];
 
     const handleAppSelect = (app) => {
-        const intent = getUPIIntent({
-            vpa: currentShop?.vpa,
-            name: currentShop?.shop_name,
-            amount: cartTotal,
-            orderId: currentOrderId,
-            appId: app.id
-        });
+        // Use the exact redirection function logic from SECTION 4 & 5
+        // shop = currentShop, order = { total_amount: cartTotal, id: currentOrderId }
+        const mockOrder = {
+            total_amount: cartTotal,
+            id: currentOrderId
+        };
 
-        if (intent) {
-            launchUPIIntent(intent);
-            // After launching intent, go to verification screen
-            // Use longer timeout to ensure intent is processed
-            setTimeout(() => navigate('/payment-qr'), 2000);
+        if (currentShop && currentOrderId) {
+            redirectToUPI(currentShop, mockOrder);
+
+            // SECTION 7: Fallback handling
+            setTimeout(() => {
+                // If they are still on this page after 1.5s, it might have failed
+                // (though redirects often stay on page until user switches)
+                // But following the user's specific instruction:
+                alert("If payment app did not open, please scan store QR manually.");
+            }, 1500);
+
+            // Navigate to verification screen after a short delay
+            setTimeout(() => navigate('/payment-qr'), 2500);
         } else {
             navigate('/payment-qr');
         }
