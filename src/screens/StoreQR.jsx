@@ -5,12 +5,8 @@ import { ArrowLeft, CheckCircle, Info, Loader2, QrCode } from 'lucide-react';
 
 const StoreQR = () => {
     const navigate = useNavigate();
-    const { cartTotal, currentOrderId, currentShop, updateOrderStatus, STATUS } = useStore();
+    const { cartTotal, currentOrderId, updateOrderStatus, STATUS } = useStore();
     const [loading, setLoading] = useState(false);
-
-    const upiLink = currentShop?.vpa
-        ? `upi://pay?pa=${currentShop.vpa}&pn=${encodeURIComponent(currentShop.shop_name)}&am=${Number(cartTotal || 0).toFixed(2)}&tn=Order%20${currentOrderId}&cu=INR`
-        : null;
 
     const handleConfirmPayment = async () => {
         if (!currentOrderId) return;
@@ -24,18 +20,6 @@ const StoreQR = () => {
         setLoading(false);
     };
 
-    const handleAppPay = (appId) => {
-        if (!upiLink) return;
-        // Standard intent link
-        window.location.href = upiLink;
-    };
-
-    const upiApps = [
-        { name: 'GPay', id: 'gpay', color: '#4285F4' },
-        { name: 'PhonePe', id: 'phonepe', color: '#5f259f' },
-        { name: 'Paytm', id: 'paytm', color: '#00BAF2' }
-    ];
-
     return (
         <div className="app-container mesh-bg flex flex-col">
             <div className="screen-padding flex-1 animate-fade">
@@ -47,31 +31,6 @@ const StoreQR = () => {
                 </div>
 
                 <div className="flex flex-col items-center text-center gap-6 mt-4">
-                    {upiLink && (
-                        <div className="w-full flex flex-col gap-3">
-                            <p className="caption text-grey-500 font-extrabold uppercase tracking-widest">Pay with your apps</p>
-                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                                {upiApps.map(app => (
-                                    <button
-                                        key={app.id}
-                                        className="btn glass flex-1 py-4 flex flex-col items-center gap-1 min-w-[100px] border-white active:scale-95 transition-all"
-                                        onClick={() => handleAppPay(app.id)}
-                                    >
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-xs" style={{ background: app.color }}>
-                                            {app.name[0]}
-                                        </div>
-                                        <span className="caption font-bold text-grey-900">{app.name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex items-center gap-4 my-2">
-                                <div className="h-[1px] bg-grey-200 flex-1"></div>
-                                <span className="caption text-grey-400 font-bold">OR SCAN PHYSICAL QR</span>
-                                <div className="h-[1px] bg-grey-200 flex-1"></div>
-                            </div>
-                        </div>
-                    )}
-
                     <div className="bg-white p-8 rounded-[40px] shadow-lg border border-grey-100 relative group overflow-hidden">
                         <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-5 transition-opacity"></div>
                         <QrCode size={200} className="text-grey-900" strokeWidth={1} />
