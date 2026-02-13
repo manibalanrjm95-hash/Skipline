@@ -1,39 +1,41 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, ShoppingCart, FileText } from 'lucide-react';
+import { Home, ShoppingCart, Clock } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const BottomNav = () => {
     const { cartCount, orders } = useStore();
-    // Simple check if there are any active orders to show a dot
     const hasActiveOrders = orders && orders.length > 0;
 
     return (
-        <nav className="bottom-nav">
-            <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                <Home size={24} strokeWidth={2.5} />
-                <span className="caption">Home</span>
+        <nav className="m3-nav-bar group">
+            <NavLink to="/dashboard" className={({ isActive }) => `m3-nav-item ${isActive ? 'active' : ''}`}>
+                <div className="icon-container">
+                    <Home size={24} />
+                </div>
+                <span className="label-text">Home</span>
             </NavLink>
 
-            <NavLink to="/cart" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} relative`}>
-                <ShoppingCart size={24} strokeWidth={2.5} />
-                <span className="caption">Cart</span>
-                {cartCount > 0 && (
-                    <span className="absolute bg-primary text-white font-bold rounded-full flex items-center justify-center shadow-sm"
-                        style={{ top: '-6px', right: '10px', width: '20px', height: '20px', fontSize: '10px', border: '2px solid white' }}>
-                        {cartCount}
-                    </span>
-                )}
+            <NavLink to="/cart" className={({ isActive }) => `m3-nav-item ${isActive ? 'active' : ''}`}>
+                <div className="icon-container relative">
+                    <ShoppingCart size={24} />
+                    {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-md-sys-color-error text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-md-sys-color-surface">
+                            {cartCount}
+                        </span>
+                    )}
+                </div>
+                <span className="label-text">Cart</span>
             </NavLink>
 
-            <NavLink to="/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} relative`}>
-                <FileText size={24} strokeWidth={2.5} />
-                <span className="caption">Orders</span>
-                {hasActiveOrders && (
-                    <span className="absolute bg-secondary text-white rounded-full border-2 border-white"
-                        style={{ top: '-2px', right: '12px', width: '10px', height: '10px' }}>
-                    </span>
-                )}
+            <NavLink to="/orders" className={({ isActive }) => `m3-nav-item ${isActive ? 'active' : ''}`}>
+                <div className="icon-container relative">
+                    <Clock size={24} />
+                    {hasActiveOrders && (
+                        <span className="absolute top-0 right-0 w-2 h-2 bg-md-sys-color-secondary rounded-full border border-md-sys-color-surface"></span>
+                    )}
+                </div>
+                <span className="label-text">Orders</span>
             </NavLink>
         </nav>
     );

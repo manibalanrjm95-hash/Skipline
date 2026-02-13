@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, QrCode, ArrowRight, ShieldCheck, ShoppingBag, Loader2 } from 'lucide-react';
+import { CheckCircle2, QrCode, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const ExitVerification = () => {
     const navigate = useNavigate();
     const { orderDetails, clearCart } = useStore();
-    const [isDone, setIsDone] = useState(false);
 
     const handleDone = () => {
         clearCart();
@@ -14,65 +13,59 @@ const ExitVerification = () => {
     };
 
     return (
-        <div className="max-app-width flex flex-col justify-center items-center page-padding text-center">
-            <div className="mb-12">
-                <div className="w-24 h-24 bg-success/10 rounded-full flex items-center justify-center mb-8 mx-auto text-success animate-bounce shadow-sm border border-success/20">
-                    <CheckCircle2 size={56} strokeWidth={1.5} />
+        <div className="m3-scaffold flex flex-col justify-center items-center">
+            <div className="m3-content flex flex-col items-center text-center">
+                <div className="mb-12">
+                    <div className="w-24 h-24 bg-md-sys-color-secondary-container rounded-full flex items-center justify-center mb-8 mx-auto text-md-sys-color-on-secondary-container animate-bounce shadow-md">
+                        <CheckCircle2 size={56} />
+                    </div>
+                    <h1 className="display-small text-md-sys-color-on-surface mb-2">Order Confirmed!</h1>
+                    <p className="body-large text-md-sys-color-on-surface-variant">Your payment was successful and verified.</p>
                 </div>
-                <h1 className="h1 text-text-primary mb-2">Order Confirmed!</h1>
-                <p className="body text-text-secondary">Your payment was successful and verified.</p>
-            </div>
 
-            <div className="w-full section-gap mb-12">
-                {/* Exit Pass Card */}
-                <div className="card-v2 border-2 border-secondary/20 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-secondary"></div>
+                {/* M3 Exit Pass Card */}
+                <div className="m3-card card-elevated w-full border-2 border-md-sys-color-outline-variant relative overflow-hidden bg-md-sys-color-surface">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-md-sys-color-primary"></div>
 
-                    <div className="flex flex-col items-center py-6">
-                        <div className="p-4 bg-bg-app border border-border rounded-2xl mb-6">
-                            <QrCode size={160} className="text-text-primary" />
+                    <div className="flex flex-col items-center py-6 px-4">
+                        <div className="p-4 bg-md-sys-color-surface-variant rounded-[24px] mb-8 shadow-inner">
+                            <QrCode size={180} />
                         </div>
 
-                        <div className="space-y-4 w-full">
-                            <div className="flex justify-between items-center px-4">
-                                <span className="label text-text-secondary uppercase">Order ID</span>
-                                <span className="body font-bold text-text-primary">#{(orderDetails?.id || 'TEST').slice(-8).toUpperCase()}</span>
+                        <div className="w-full space-y-4 text-left">
+                            <div className="flex justify-between items-center border-b border-md-sys-color-outline-variant pb-2">
+                                <span className="label-medium text-md-sys-color-on-surface-variant uppercase tracking-widest">Order ID</span>
+                                <span className="title-medium font-bold text-md-sys-color-on-surface">#{(orderDetails?.id || 'ALPHA-001').slice(-8).toUpperCase()}</span>
                             </div>
-                            <div className="flex justify-between items-center px-4">
-                                <span className="label text-text-secondary uppercase">Entry Time</span>
-                                <span className="body font-bold text-text-primary">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <div className="flex justify-between items-center border-b border-md-sys-color-outline-variant pb-2">
+                                <span className="label-medium text-md-sys-color-on-surface-variant uppercase tracking-widest">Entry Time</span>
+                                <span className="title-medium font-bold text-md-sys-color-on-surface">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
-                            <div className="border-t border-dashed border-border mt-4 pt-4 flex justify-between items-center px-4">
-                                <span className="label text-text-secondary uppercase">Status</span>
-                                <span className="body font-bold text-success flex items-center gap-2">
-                                    <ShieldCheck size={18} /> CLEARED FOR EXIT
+                            <div className="flex justify-between items-center pt-2">
+                                <span className="label-medium text-md-sys-color-on-surface-variant uppercase tracking-widest">Status</span>
+                                <span className="title-medium font-bold text-md-sys-color-primary flex items-center gap-2">
+                                    <ShieldCheck size={20} /> CLEARED FOR EXIT
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-4 text-left p-2">
-                    <div className="flex gap-4">
-                        <div className="w-10 h-10 rounded-full bg-bg-app border border-border flex items-center justify-center shrink-0">
-                            <ShoppingBag size={20} className="text-text-secondary" />
-                        </div>
-                        <p className="small text-text-secondary">
-                            Show this QR code at the <strong>SkipLine Exit Gate</strong> for quick verification.
-                        </p>
+                <div className="flex gap-4 p-4 mt-8 bg-md-sys-color-surface-variant/30 rounded-2xl items-start text-left">
+                    <div className="w-10 h-10 bg-md-sys-color-surface rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                        <ShoppingBag size={20} className="text-md-sys-color-primary" />
                     </div>
+                    <p className="body-small text-md-sys-color-on-surface-variant">
+                        Show this QR code at the <strong>SkipLine Exit Gate</strong> for quick verification.
+                    </p>
                 </div>
-            </div>
 
-            <button
-                className="btn-v2 btn-v2-primary max-w-xs"
-                onClick={handleDone}
-            >
-                Done / Start New Session
-            </button>
-
-            <div className="mt-12 opacity-40">
-                <p className="label font-bold text-text-secondary tracking-widest">THANK YOU FOR SHOPPING</p>
+                <button
+                    className="m3-btn btn-filled h-16 mt-12 mb-8 shadow-lg font-bold tracking-widest"
+                    onClick={handleDone}
+                >
+                    DONE / START NEW
+                </button>
             </div>
         </div>
     );
