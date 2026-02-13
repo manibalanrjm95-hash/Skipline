@@ -56,49 +56,53 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="app-container flex flex-col">
-            <div className="screen-padding pb-32 animate-fade-in">
+        <div className="app-container flex flex-col relative overflow-hidden">
+            {/* Helixion V4 Mesh Background */}
+            <div className="mesh-bg"></div>
 
+            <div className="screen-padding pb-32 animate-fade-in relative z-10">
                 {/* Header Section */}
-                <div className="flex justify-between items-end mb-8">
-                    <div>
-                        <p className="caption text-primary mb-1">Shopping At</p>
-                        <h1 className="text-h1 text-grey-900 leading-tight">
+                <div className="flex justify-between items-center mb-10">
+                    <div className="animate-slide-up">
+                        <p className="caption text-primary mb-1 tracking-[0.2em]">Live at</p>
+                        <h1 className="text-h1 text-grey-900 leading-tight font-black">
                             {currentShop?.shop_name || 'SkipLine Store'}
                         </h1>
                     </div>
-                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center border border-grey-100">
-                        <ShoppingBag size={20} className="text-grey-900" />
+                    <div className="w-14 h-14 glass-card flex items-center justify-center magnetic-btn">
+                        <ShoppingBag size={24} className="text-grey-900" strokeWidth={2.5} />
                     </div>
                 </div>
 
                 {/* Hero / Start Scanning Card */}
                 {!searchTerm && (
-                    <div className="card-premium bg-grey-900 text-white mb-8 relative overflow-hidden group border-none">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                        <div className="relative z-10">
-                            <div className="mb-6">
-                                <h2 className="text-3xl font-bold mb-2">Ready to shop?</h2>
-                                <p className="text-grey-400">Scan products to add them to your cart instantly.</p>
+                    <div className="card-premium bg-grey-900 text-white mb-10 relative overflow-hidden group border-none shadow-2xl animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/30 transition-all duration-700"></div>
+                        <div className="relative z-10 p-2">
+                            <div className="mb-8">
+                                <h2 className="text-3xl font-black mb-2 tracking-tight">Ready to shop?</h2>
+                                <p className="text-grey-400 font-medium">Scan items to fill your cart instantly.</p>
                             </div>
                             <button
                                 onClick={() => navigate('/scan')}
-                                className="w-full bg-white text-grey-900 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                                className="w-full bg-white text-grey-900 py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
                             >
-                                <ScanLine size={24} /> Start Scanning
+                                <ScanLine size={28} strokeWidth={3} /> START SCANNING
                             </button>
                         </div>
                     </div>
                 )}
 
                 {/* Search Bar */}
-                <div className="relative mb-8 z-20">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-grey-400" size={22} />
+                <div className="relative mb-10 z-20 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-grey-400">
+                        <Search size={24} strokeWidth={2.5} />
+                    </div>
                     <input
                         type="text"
-                        placeholder="Search for products..."
-                        className="input-field pl-14 shadow-sm border-none bg-white"
-                        style={{ borderRadius: '20px' }}
+                        placeholder="Search for items..."
+                        className="input-field pl-16 py-5 shadow-lg border-white/50 bg-white/80 backdrop-blur-md"
+                        style={{ borderRadius: '24px' }}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -113,62 +117,71 @@ const Dashboard = () => {
                 </div>
 
                 {/* Products Section */}
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-h2">Featured Items</h3>
-                        <button className="text-primary font-bold text-sm">See All</button>
+                        <h3 className="text-h2 font-black">Featured Products</h3>
+                        <button className="text-primary font-black text-sm tracking-wide bg-primary/5 px-4 py-2 rounded-full">See All</button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {filteredProducts.map(product => {
+                    <div className="grid grid-cols-2 gap-5">
+                        {filteredProducts.map((product, index) => {
                             const qty = getCartDelay(product.id);
                             const isOutOfStock = product.stock <= 0;
 
                             return (
-                                <div key={product.id} className="card-action bg-white p-4 items-start text-left h-auto relative overflow-hidden group border-transparent hover:border-primary/20">
+                                <div
+                                    key={product.id}
+                                    className="glass-card p-5 items-start text-left h-auto relative group animate-slide-up"
+                                    style={{ animationDelay: `${0.3 + index * 0.05}s` }}
+                                >
                                     {/* Image Area */}
-                                    <div className="w-full aspect-square bg-grey-100 rounded-2xl mb-4 relative overflow-hidden flex items-center justify-center">
-                                        <ShoppingBag size={32} className="text-grey-300" />
+                                    <div className="w-full aspect-square bg-grey-200/50 rounded-2xl mb-5 relative overflow-hidden flex items-center justify-center group-hover:bg-grey-200 transition-colors">
+                                        <ShoppingBag size={40} className="text-grey-300 transform group-hover:scale-110 transition-transform duration-500" strokeWidth={1.5} />
                                         {qty > 0 && (
-                                            <div className="absolute top-2 right-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full shadow-md z-10">
-                                                x{qty}
+                                            <div className="absolute top-3 right-3 bg-primary text-white text-xs font-black px-2.5 py-1.5 rounded-xl shadow-lg z-10 scale-110">
+                                                {qty}
+                                            </div>
+                                        )}
+                                        {isOutOfStock && (
+                                            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+                                                <span className="bg-grey-900 text-white text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">Out of Stock</span>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Content */}
                                     <div className="w-full">
-                                        <h3 className="text-lg font-bold text-grey-900 leading-tight mb-1 truncate">{product.product_name}</h3>
-                                        <p className="body-sm text-grey-500 mb-3">{product.product_code}</p>
+                                        <h3 className="text-lg font-black text-grey-900 leading-tight mb-1 truncate">{product.product_name}</h3>
+                                        <p className="text-[10px] font-bold text-grey-400 uppercase tracking-widest mb-4">{product.product_code}</p>
 
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="text-xl font-extrabold text-grey-900">₹{Number(product.price).toFixed(0)}</span>
+                                            <span className="text-2xl font-black text-grey-900">₹{Number(product.price).toFixed(0)}</span>
 
                                             {qty === 0 ? (
                                                 <button
-                                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isOutOfStock
+                                                    className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all magnetic-btn ${isOutOfStock
                                                         ? 'bg-grey-100 text-grey-300'
-                                                        : 'bg-grey-900 text-white shadow-lg active:scale-90 hover:bg-primary'}`}
+                                                        : 'bg-grey-900 text-white shadow-xl hover:bg-primary'}`}
                                                     onClick={() => !isOutOfStock && handleAddToCart(product)}
                                                     disabled={isOutOfStock}
                                                 >
-                                                    <Plus size={20} />
+                                                    <Plus size={24} strokeWidth={3} />
                                                 </button>
                                             ) : (
-                                                <div className="flex items-center gap-2 bg-grey-100 rounded-full p-1 pr-3">
+                                                <div className="flex items-center gap-2 bg-grey-200/50 rounded-2xl p-1 pr-3">
                                                     <button
-                                                        className="w-8 h-8 bg-white rounded-full shadow-sm flex items-center justify-center"
+                                                        className="w-9 h-9 bg-white rounded-xl shadow-md flex items-center justify-center magnetic-btn"
                                                         onClick={() => updateQuantity(product.id, -1)}
                                                     >
-                                                        <Minus size={16} />
+                                                        <Minus size={18} strokeWidth={3} />
                                                     </button>
-                                                    <span className="font-bold text-sm">{qty}</span>
+                                                    <span className="font-black text-sm px-1">{qty}</span>
                                                     <button
-                                                        className="w-8 h-8 bg-white rounded-full shadow-sm flex items-center justify-center text-primary"
+                                                        className="w-9 h-9 bg-white rounded-xl shadow-md flex items-center justify-center text-primary magnetic-btn"
                                                         onClick={() => handleAddToCart(product)}
                                                         disabled={product.stock <= qty}
                                                     >
-                                                        <Plus size={16} />
+                                                        <Plus size={18} strokeWidth={3} />
                                                     </button>
                                                 </div>
                                             )}
@@ -181,9 +194,9 @@ const Dashboard = () => {
                 </div>
 
                 {filteredProducts.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                        <ShoppingBag size={48} className="mb-4 text-grey-300" />
-                        <p className="font-bold text-grey-400">No products found</p>
+                    <div className="flex flex-col items-center justify-center py-24 opacity-30">
+                        <ShoppingBag size={64} className="mb-6 text-grey-400" strokeWidth={1} />
+                        <p className="font-black text-grey-500 uppercase tracking-[0.2em] text-sm">No items found</p>
                     </div>
                 )}
             </div>

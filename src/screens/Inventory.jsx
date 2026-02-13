@@ -53,91 +53,92 @@ const Inventory = () => {
     );
 
     return (
-        <div className="admin-layout flex bg-grey-50 min-h-screen">
+        <div className="admin-layout flex min-h-screen relative overflow-hidden bg-grey-50">
+            {/* Helixion V4 Mesh Background */}
+            <div className="mesh-bg"></div>
+
             <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-            <div className="ml-64 flex-1 p-10 animate-fade-in transition-all duration-300">
+            <div className="ml-64 flex-1 p-10 animate-fade-in relative z-10">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-10 flex-col-mobile gap-4">
-                    <div className="flex items-center gap-4 w-full">
+                <div className="flex justify-between items-center mb-12 flex-col-mobile gap-4">
+                    <div className="flex items-center gap-6 w-full animate-slide-up">
                         <button
-                            className="lg:hidden p-3 bg-white rounded-xl shadow-sm text-grey-600"
+                            className="lg:hidden p-4 bg-white rounded-2xl shadow-lg text-grey-600 magnetic-btn"
                             onClick={() => setIsSidebarOpen(true)}
                         >
                             <Menu size={24} />
                         </button>
                         <div>
-                            <p className="caption text-grey-400 mb-1">INVENTORY</p>
-                            <h1 className="text-display text-grey-900 leading-tight">Stock Control</h1>
+                            <p className="caption text-primary mb-1 tracking-[0.3em] font-black">LOGISTICS</p>
+                            <h1 className="text-display text-grey-900 leading-tight font-black">Stock Control</h1>
                         </div>
                     </div>
                 </div>
 
-                {/* Search Bar */}
-                <div className="bg-white p-2 rounded-[24px] shadow-sm mb-8 flex gap-2 border border-grey-100">
-                    <div className="flex-1 bg-grey-50 rounded-2xl flex items-center px-6 transition-all focus-within:ring-2 focus-within:ring-primary/10">
-                        <Search size={24} className="text-grey-400 mr-4" />
+                {/* Search & Actions Bar */}
+                <div className="glass-card p-3 rounded-[32px] shadow-xl mb-12 flex gap-4 border-white/80 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    <div className="flex-1 bg-grey-100/50 rounded-2xl flex items-center px-6 transition-all focus-within:bg-white focus-within:shadow-inner">
+                        <Search size={24} className="text-grey-400 mr-4" strokeWidth={2.5} />
                         <input
                             type="text"
-                            placeholder="Search products..."
-                            className="bg-transparent py-4 w-full text-lg font-bold text-grey-900 outline-none placeholder:text-grey-400"
+                            placeholder="Search inventory..."
+                            className="bg-transparent py-5 w-full text-lg font-black text-grey-900 outline-none placeholder:text-grey-400 placeholder:font-bold"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    {/* <button className="btn btn-primary px-8 rounded-2xl shadow-lg flex items-center gap-2 font-bold whitespace-nowrap">
-                        <Plus size={24} /> <span className="hidden md:inline">Add Product</span>
-                    </button> */}
                 </div>
 
-                {/* Product List (Card Grid for better responsiveness) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
-                    {filteredProducts.map(p => (
-                        <div key={p.id} className="card-premium p-6 bg-white border-transparent hover:border-grey-200 group relative flex flex-col gap-4">
+                {/* Product List */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 pb-24">
+                    {filteredProducts.map((p, index) => (
+                        <div key={p.id}
+                            className="card-premium p-8 bg-white border-white/80 hover:border-primary/20 group relative flex flex-col gap-6 animate-slide-up"
+                            style={{ animationDelay: `${0.2 + index * 0.05}s` }}>
+
                             <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 bg-grey-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                        <Package size={32} className="text-grey-300" strokeWidth={1.5} />
+                                <div className="flex items-center gap-5">
+                                    <div className="w-18 h-18 bg-grey-100/50 rounded-[24px] flex items-center justify-center flex-shrink-0 group-hover:bg-primary/5 transition-colors">
+                                        <Package size={36} className="text-grey-300 group-hover:text-primary transition-colors" strokeWidth={1.5} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-grey-900 text-lg leading-tight mb-1 truncate max-w-[150px]" title={p.product_name}>{p.product_name}</h3>
-                                        <p className="text-xs font-bold text-grey-400 uppercase tracking-widest">{p.product_code}</p>
+                                        <h3 className="font-black text-grey-900 text-xl leading-tight mb-1 truncate" title={p.product_name}>{p.product_name}</h3>
+                                        <p className="text-[10px] font-black text-grey-400 uppercase tracking-widest">{p.product_code}</p>
                                     </div>
                                 </div>
-                                <div className={`p-2 rounded-xl ${p.barcode_enabled ? 'bg-success/10 text-success' : 'bg-grey-100 text-grey-400'}`}>
-                                    {p.barcode_enabled ? <Check size={20} /> : <EyeOff size={20} />}
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${p.barcode_enabled ? 'bg-success-bg text-success' : 'bg-grey-100 text-grey-400'}`}>
+                                    {p.barcode_enabled ? <Check size={20} strokeWidth={3} /> : <EyeOff size={20} strokeWidth={2} />}
                                 </div>
                             </div>
 
-                            <div className="flex items-end justify-between mt-auto">
+                            <div className="flex items-end justify-between mt-auto bg-grey-50/50 p-5 rounded-2xl border border-grey-100/30">
                                 <div>
-                                    <p className="caption text-grey-400 mb-1">PRICE</p>
-                                    <p className="text-2xl font-black text-grey-900">₹{p.price}</p>
+                                    <p className="text-[10px] font-black text-grey-400 mb-1 uppercase tracking-widest">Pricing</p>
+                                    <p className="text-3xl font-black text-grey-900 tracking-tighter">₹{p.price}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="caption text-grey-400 mb-1">STOCK</p>
-                                    <span className={`inline-flex items-center gap-1.5 font-bold ${p.stock < 10 ? 'text-error' : 'text-success'}`}>
-                                        {p.stock < 10 && <AlertCircle size={14} />}
-                                        {p.stock} units
+                                    <p className="text-[10px] font-black text-grey-400 mb-1 uppercase tracking-widest">Inventory</p>
+                                    <span className={`inline-flex items-center gap-2 text-sm font-black uppercase tracking-wide ${p.stock < 10 ? 'text-error' : 'text-success'}`}>
+                                        {p.stock < 10 && <AlertCircle size={14} strokeWidth={3} />}
+                                        {p.stock} Units
                                     </span>
                                 </div>
                             </div>
 
                             {/* Hover Actions Overlay */}
-                            <div className="absolute inset-2 bg-white/95 backdrop-blur-sm rounded-[28px] flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 border border-grey-100">
+                            <div className="absolute inset-2 bg-white/95 backdrop-blur-md rounded-[30px] flex items-center justify-center gap-5 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 border border-grey-100/50 shadow-2xl">
                                 <button
-                                    className="p-4 bg-grey-100 text-grey-600 rounded-2xl hover:bg-white hover:shadow-md hover:scale-110 transition-all border border-transparent hover:border-grey-100"
+                                    className="w-16 h-16 bg-white text-grey-700 rounded-2xl shadow-lg border border-grey-100 flex items-center justify-center magnetic-btn hover:text-primary transition-all"
                                     onClick={() => handleEdit(p)}
-                                    title="Edit Details"
                                 >
-                                    <Edit3 size={24} />
+                                    <Edit3 size={32} strokeWidth={2.5} />
                                 </button>
                                 <button
-                                    className={`p-4 rounded-2xl hover:shadow-md hover:scale-110 transition-all border border-transparent ${p.barcode_enabled ? 'bg-grey-100 text-grey-600 hover:bg-error/10 hover:text-error' : 'bg-success/10 text-success hover:bg-success hover:text-white'}`}
+                                    className={`w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center border transition-all magnetic-btn ${p.barcode_enabled ? 'bg-white text-grey-400 border-grey-100 hover:text-error' : 'bg-success text-white border-success shadow-success/20'}`}
                                     onClick={() => toggleProductStatus(p.id)}
-                                    title={p.barcode_enabled ? 'Disable Scanning' : 'Enable Scanning'}
                                 >
-                                    {p.barcode_enabled ? <EyeOff size={24} /> : <Eye size={24} />}
+                                    {p.barcode_enabled ? <EyeOff size={32} strokeWidth={2.5} /> : <Eye size={32} strokeWidth={2.5} />}
                                 </button>
                             </div>
                         </div>
@@ -145,70 +146,71 @@ const Inventory = () => {
                 </div>
 
                 {filteredProducts.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-40">
-                        <div className="w-24 h-24 bg-grey-100 rounded-full flex items-center justify-center mb-6">
-                            <Search size={40} className="text-grey-400" />
+                    <div className="flex flex-col items-center justify-center py-32 opacity-20">
+                        <div className="w-32 h-32 bg-grey-100 rounded-[40px] flex items-center justify-center mb-8">
+                            <Search size={64} className="text-grey-400" strokeWidth={1} />
                         </div>
-                        <h3 className="text-xl font-bold text-grey-900">No products found</h3>
-                        <p className="text-grey-500 font-medium">Try checking your spelling or filters.</p>
+                        <h3 className="text-2xl font-black text-grey-900 tracking-tight">No Items Found</h3>
+                        <p className="text-sm font-bold text-grey-500 uppercase tracking-widest mt-2">Check filters or spelling</p>
                     </div>
                 )}
 
                 {/* Edit Modal */}
                 {editingProduct && (
-                    <div className="fixed inset-0 bg-grey-900/60 backdrop-blur-md flex items-center justify-center z-[100] animate-fade-in p-4">
-                        <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl transform transition-all scale-100 border border-white/50 relative overflow-hidden">
-                            {/* Decor */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                    <div className="fixed inset-0 bg-grey-900/40 backdrop-blur-xl flex items-center justify-center z-[100] animate-fade-in p-6">
+                        <div className="glass-card w-full max-w-lg p-10 shadow-float border-white relative overflow-hidden animate-slide-up">
+                            {/* Accent Background Blobs */}
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
 
                             <button
-                                className="absolute top-6 right-6 p-2 bg-grey-50 rounded-full text-grey-400 hover:bg-grey-100 hover:text-grey-900 transition-colors"
+                                className="absolute top-8 right-8 w-11 h-11 bg-white/50 rounded-2xl text-grey-400 hover:text-grey-900 transition-all flex items-center justify-center hover:bg-white hover:shadow-lg"
                                 onClick={() => setEditingProduct(null)}
                             >
-                                <X size={24} />
+                                <X size={24} strokeWidth={3} />
                             </button>
 
-                            <div className="flex justify-between items-start mb-8 relative z-10">
+                            <div className="flex justify-between items-start mb-12 relative z-10">
                                 <div>
-                                    <h2 className="text-2xl font-black text-grey-900 mb-1">Edit Product</h2>
-                                    <p className="text-sm font-bold text-grey-500">{editingProduct.product_name}</p>
+                                    <p className="text-[10px] font-black text-primary mb-1 uppercase tracking-[0.3em]">UPDATE RECORD</p>
+                                    <h2 className="text-3xl font-black text-grey-900 tracking-tighter mb-1">{editingProduct.product_name}</h2>
+                                    <p className="text-xs font-bold text-grey-400 uppercase tracking-widest">{editingProduct.product_code}</p>
                                 </div>
                             </div>
 
-                            <div className="space-y-6 relative z-10">
-                                <div className="space-y-2">
-                                    <label className="caption ml-1">Unit Price (₹)</label>
+                            <div className="space-y-8 relative z-10">
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-grey-400 uppercase tracking-widest ml-1">Unit Price (₹)</label>
                                     <input
                                         type="number"
-                                        className="input-field"
+                                        className="input-field bg-white/50 backdrop-blur-sm py-6 text-2xl font-black"
                                         value={editForm.price}
                                         onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
                                         autoFocus
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="caption ml-1">Stock Quantity</label>
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-grey-400 uppercase tracking-widest ml-1">Current Stock Count</label>
                                     <input
                                         type="number"
-                                        className="input-field"
+                                        className="input-field bg-white/50 backdrop-blur-sm py-6 text-2xl font-black"
                                         value={editForm.stock}
                                         onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 mt-8 relative z-10">
+                            <div className="flex gap-6 mt-12 relative z-10">
                                 <button
-                                    className="flex-1 py-4 rounded-xl font-bold text-grey-500 hover:bg-grey-50 transition-colors"
+                                    className="flex-1 py-5 rounded-2xl font-black text-sm text-grey-400 hover:text-grey-900 hover:bg-white/50 transition-all uppercase tracking-widest magnetic-btn"
                                     onClick={() => setEditingProduct(null)}
                                 >
-                                    Cancel
+                                    Discard
                                 </button>
                                 <button
-                                    className="flex-[2] btn btn-primary py-4 shadow-primary rounded-xl"
+                                    className="flex-[2] btn btn-primary py-5 shadow-primary rounded-2xl font-black text-lg magnetic-btn uppercase tracking-widest"
                                     onClick={handleSave}
                                 >
-                                    Save Changes
+                                    APPLY CHANGES
                                 </button>
                             </div>
                         </div>
