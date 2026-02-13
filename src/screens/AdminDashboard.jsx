@@ -1,6 +1,4 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, Users, ShoppingCart, TrendingUp, Clock, AlertCircle, Zap, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, Users, ShoppingCart, TrendingUp, Clock, AlertCircle, Zap, ChevronRight, Loader2 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const Sidebar = () => (
@@ -34,13 +32,26 @@ const Sidebar = () => (
 );
 
 const AdminDashboard = () => {
-    const { orders } = useStore();
+    const { orders, products, loading } = useStore();
+
+    if (loading) {
+        return (
+            <div className="admin-content mesh-bg flex items-center justify-center">
+                <Loader2 size={40} className="text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const todaysOrders = orders.filter(o => o.created_at && o.created_at.startsWith(today));
+    const todaysRevenue = todaysOrders.reduce((acc, o) => acc + o.total_amount, 0);
+    const lowStockAlerts = products.filter(p => p.stock < 20).slice(0, 2);
 
     const metrics = [
-        { label: 'Active Sessions', value: '12', icon: Users, color: 'var(--color-secondary)', bg: 'var(--color-secondary-glow)' },
-        { label: "Today's Revenue", value: '₹4,250', icon: TrendingUp, color: 'var(--success)', bg: 'rgba(0, 186, 74, 0.1)' },
-        { label: 'Total Orders', value: orders.length + 42, icon: ShoppingCart, color: 'var(--color-primary)', bg: 'var(--color-primary-glow)' },
-        { label: 'Avg. Checkout', value: '45s', icon: Clock, color: 'var(--warning)', bg: 'rgba(255, 204, 0, 0.1)' },
+        { label: 'Active Sessions', value: '4', icon: Users, color: 'var(--color-secondary)', bg: 'var(--color-secondary-glow)' },
+        { label: "Today's Revenue", value: `₹${todaysRevenue.toLocaleString()}`, icon: TrendingUp, color: 'var(--success)', bg: 'rgba(0, 186, 74, 0.1)' },
+        { label: 'Total Orders', value: orders.length.toString(), icon: ShoppingCart, color: 'var(--color-primary)', bg: 'var(--color-primary-glow)' },
+        { label: 'Avg. Order', value: orders.length ? `₹${(orders.reduce((acc, o) => acc + o.total_amount, 0) / orders.length).toFixed(0)}` : '₹0', icon: Clock, color: 'var(--warning)', bg: 'rgba(255, 204, 0, 0.1)' },
     ];
 
     return (
@@ -120,27 +131,27 @@ const AdminDashboard = () => {
                             <h3 className="font-extrabold text-grey-900">Stock Alerts</h3>
                         </div>
                         <div className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-2 p-4 bg-error-light rounded-2xl border border-white">
-                                <div className="flex justify-between">
-                                    <p className="caption font-extrabold text-error">CRITICAL STOCK</p>
-                                    <span className="caption font-bold text-grey-700">2 left</span>
+                            {lowStockAlerts.length > 0 ? lowStockAlerts.map((alert, i) => (
+                                <div key={i} className={`flex flex-col gap-2 p-4 ${alert.stock < 5 ? 'bg-error-light' : 'bg-warning-light'} rounded-2xl border border-white`}>
+                                    <div className="flex justify-between">
+                                        <p className={`caption font-extrabold ${alert.stock < 5 ? 'text-error' : 'text-warning'}`}>
+                                            {alert.stock < 5 ? 'CRITICAL STOCK' : 'LOW STOCK'}
+                                        </p>
+                                        <span className="caption font-bold text-grey-700">{alert.stock} left</span>
+                                    </div>
+                                    <p className="body-sm font-bold text-grey-900">{alert.product_name}</p>
+                                    <div className="progress-bar w-full mt-2" style={{ height: '6px' }}>
+                                        <div
+                                            className={`progress-fill ${alert.stock < 5 ? 'bg-error' : 'bg-warning'}`}
+                                            style={{ width: `${Math.min(100, (alert.stock / 20) * 100)}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
-                                <p className="body-sm font-bold text-grey-900">Fresh Whole Milk 1L</p>
-                                <div className="progress-bar w-full mt-2" style={{ height: '6px' }}>
-                                    <div className="progress-fill bg-error" style={{ width: '15%' }}></div>
+                            )) : (
+                                <div className="p-8 text-center bg-grey-100 rounded-2xl border border-dashed">
+                                    <p className="caption text-grey-400 font-bold">ALL STOCK NORMAL</p>
                                 </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2 p-4 bg-warning-light rounded-2xl border border-white">
-                                <div className="flex justify-between">
-                                    <p className="caption font-extrabold text-warning">LOW STOCK</p>
-                                    <span className="caption font-bold text-grey-700">14 left</span>
-                                </div>
-                                <p className="body-sm font-bold text-grey-900">Multigrain Bread</p>
-                                <div className="progress-bar w-full mt-2" style={{ height: '6px' }}>
-                                    <div className="progress-fill bg-warning" style={{ width: '40%' }}></div>
-                                </div>
-                            </div>
+                            )}
                         </div>
                         <button className="btn btn-primary w-full mt-auto shadow-md">Create Restock Order</button>
                     </div>

@@ -10,7 +10,7 @@ const ShopCodeEntry = () => {
     const navigate = useNavigate();
     const { loginShop } = useStore();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!code) {
             setError('Please enter a shop code');
@@ -20,15 +20,13 @@ const ShopCodeEntry = () => {
         setError('');
         setLoading(true);
 
-        setTimeout(() => {
-            const result = loginShop(code.toUpperCase());
-            if (result.success) {
-                navigate('/dashboard');
-            } else {
-                setError(result.error);
-                setLoading(false);
-            }
-        }, 1200);
+        const result = await loginShop(code.toUpperCase());
+        if (result.success) {
+            navigate('/dashboard');
+        } else {
+            setError(result.error);
+            setLoading(false);
+        }
     };
 
     return (

@@ -8,15 +8,20 @@ const Checkout = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
         setLoading(true);
-        setTimeout(() => {
-            const result = checkout();
+        try {
+            const result = await checkout();
             if (result.success) {
                 navigate('/exit', { state: { orderId: result.orderId } });
+            } else {
+                alert(result.error); // Basic fallback for checkout errors
             }
+        } catch (err) {
+            console.error('Payment error:', err);
+        } finally {
             setLoading(false);
-        }, 2500);
+        }
     };
 
     return (

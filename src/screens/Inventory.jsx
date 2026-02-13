@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, Search, Plus, Edit3, Trash2, Eye, EyeOff, Zap, Filter, MoreVertical } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, Search, Plus, Edit3, Trash2, Eye, EyeOff, Zap, Filter, MoreVertical, Loader2 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const Sidebar = () => (
@@ -34,8 +34,16 @@ const Sidebar = () => (
 );
 
 const Inventory = () => {
-    const { products, toggleProductStatus } = useStore();
+    const { products, toggleProductStatus, loading } = useStore();
     const [searchTerm, setSearchTerm] = useState('');
+
+    if (loading) {
+        return (
+            <div className="admin-content mesh-bg flex items-center justify-center">
+                <Loader2 size={40} className="text-primary animate-spin" />
+            </div>
+        );
+    }
 
     const filteredProducts = products.filter(p =>
         p.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

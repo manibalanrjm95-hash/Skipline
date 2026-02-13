@@ -1,27 +1,47 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { SEED_DATA } from '../db';
+import { supabase } from '../lib/supabase';
 
 const StoreContext = createContext();
 
 export const StoreProvider = ({ children }) => {
-    const [shops, setShops] = useState(SEED_DATA.shops);
-    const [products, setProducts] = useState(SEED_DATA.products);
+    const [shops, setShops] = useState([]);
+    const [products, setProducts] = useState([]);
     const [user, setUser] = useState(null); // { id, session_id, shop_id, cart_status }
     const [cart, setCart] = useState([]); // Array of { product_id, quantity, subtotal }
     const [orders, setOrders] = useState([]);
     const [currentShop, setCurrentShop] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Persistence (Simplified for MVP)
+    // Initial load and Session Restoration
     useEffect(() => {
-        const savedUser = localStorage.getItem('skipline_user');
-        const savedCart = localStorage.getItem('skipline_cart');
-        const savedShop = localStorage.getItem('skipline_shop');
+        const init = async () => {
+            setLoading(true);
+            try {
+                // Fetch basic data
+                const { data: shopsData } = await supabase.from('shops').select('*');
+                const { data: productsData } = await supabase.from('products').select('*');
 
-        if (savedUser) setUser(JSON.parse(savedUser));
-        if (savedCart) setCart(JSON.parse(savedCart));
-        if (savedShop) setCurrentShop(JSON.parse(savedShop));
+                if (shopsData) setShops(shopsData);
+                if (productsData) setProducts(productsData);
+
+                // Restore session from localStorage
+                const savedUser = localStorage.getItem('skipline_user');
+                const savedCart = localStorage.getItem('skipline_cart');
+                const savedShop = localStorage.getItem('skipline_shop');
+
+                if (savedUser) setUser(JSON.parse(savedUser));
+                if (savedCart) setCart(JSON.parse(savedCart));
+                if (savedShop) setCurrentShop(JSON.parse(savedShop));
+            } catch (error) {
+                console.error('Initialization error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        init();
     }, []);
 
+    // Sync state to localStorage
     useEffect(() => {
         if (user) localStorage.setItem('skipline_user', JSON.stringify(user));
         else localStorage.removeItem('skipline_user');
@@ -36,9 +56,19 @@ export const StoreProvider = ({ children }) => {
         else localStorage.removeItem('skipline_shop');
     }, [currentShop]);
 
-    const loginShop = (shopCode) => {
-        const shop = shops.find(s => s.shop_code === shopCode && s.active_status);
-        if (shop) {
+    const loginShop = async (shopCode) => {
+        try {
+            const { data: shop, error } = await supabase
+                .from('shops')
+                .select('*')
+                .eq('shop_code', shopCode)
+                .eq('active_status', true)
+                .single();
+
+            if (error || !shop) {
+                return { success: false, error: 'Invalid or inactive shop code' };
+            }
+
             const newUser = {
                 id: `user-${Date.now()}`,
                 session_id: `sess-${Math.random().toString(36).substr(2, 9)}`,
@@ -46,12 +76,14 @@ export const StoreProvider = ({ children }) => {
                 cart_status: 'active',
                 created_at: new Date().toISOString()
             };
+
             setUser(newUser);
             setCurrentShop(shop);
             setCart([]);
             return { success: true };
+        } catch (err) {
+            return { success: false, error: 'Connection failed' };
         }
-        return { success: false, error: 'Invalid or inactive shop code' };
     };
 
     const logout = () => {
@@ -100,50 +132,89 @@ export const StoreProvider = ({ children }) => {
         setCart(newCart);
     };
 
-    const checkout = () => {
+    const checkout = async () => {
         if (cart.length === 0) return { success: false, error: 'Cart is empty' };
 
         const totalAmount = cart.reduce((acc, item) => acc + item.subtotal, 0);
-        const newOrder = {
-            id: `ORD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-            user_id: user.id,
-            items: [...cart],
-            total_amount: totalAmount,
-            payment_status: 'paid',
-            verification_status: 'pending',
-            exit_status: 'pending',
-            created_at: new Date().toISOString()
-        };
 
-        // Reduce stock
-        const newProducts = products.map(p => {
-            const cartItem = cart.find(item => item.product_id === p.id);
-            if (cartItem) {
-                return { ...p, stock: p.stock - cartItem.quantity };
+        try {
+            // Save order to Supabase
+            const { data: order, error } = await supabase
+                .from('orders')
+                .insert({
+                    shop_id: currentShop.id,
+                    customer_name: 'Guest Customer',
+                    total_amount: totalAmount,
+                    items: cart,
+                    status: 'paid'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Update product stocks in Supabase
+            for (const item of cart) {
+                const product = products.find(p => p.id === item.product_id);
+                if (product) {
+                    await supabase
+                        .from('products')
+                        .update({ stock: Math.max(0, product.stock - item.quantity) })
+                        .eq('id', product.id);
+                }
             }
-            return p;
-        });
 
-        setProducts(newProducts);
-        setOrders([...orders, newOrder]);
-        setUser({ ...user, cart_status: 'checkout' });
-        setCart([]);
-        return { success: true, orderId: newOrder.id };
+            // Refresh local product state
+            const { data: freshProducts } = await supabase.from('products').select('*');
+            if (freshProducts) setProducts(freshProducts);
+
+            const newOrder = {
+                ...order,
+                verification_status: 'pending',
+                exit_status: 'pending'
+            };
+
+            setOrders([...orders, newOrder]);
+            setUser({ ...user, cart_status: 'checkout' });
+            setCart([]);
+            return { success: true, orderId: order.id };
+        } catch (err) {
+            console.error('Checkout failed:', err);
+            return { success: false, error: 'Payment processing failed. Please try again.' };
+        }
     };
 
-    const toggleProductStatus = (productId) => {
-        setProducts(prev => prev.map(p =>
-            p.id === productId ? { ...p, barcode_enabled: !p.barcode_enabled } : p
-        ));
+    const toggleProductStatus = async (productId) => {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+
+        const newStatus = !product.barcode_enabled;
+        const { error } = await supabase
+            .from('products')
+            .update({ barcode_enabled: newStatus })
+            .eq('id', productId);
+
+        if (!error) {
+            setProducts(products.map(p =>
+                p.id === productId ? { ...p, barcode_enabled: newStatus } : p
+            ));
+        }
     };
 
-    const verifyOrder = (orderId) => {
-        setOrders(orders.map(o => {
-            if (o.id === orderId) {
-                return { ...o, verification_status: 'verified', exit_status: 'completed' };
-            }
-            return o;
-        }));
+    const verifyOrder = async (orderId) => {
+        const { error } = await supabase
+            .from('orders')
+            .update({ status: 'verified' })
+            .eq('id', orderId);
+
+        if (!error) {
+            setOrders(orders.map(o => {
+                if (o.id === orderId) {
+                    return { ...o, status: 'verified', verification_status: 'verified', exit_status: 'completed' };
+                }
+                return o;
+            }));
+        }
     };
 
     const cartTotal = cart.reduce((acc, item) => acc + item.subtotal, 0);
@@ -151,7 +222,7 @@ export const StoreProvider = ({ children }) => {
 
     return (
         <StoreContext.Provider value={{
-            shops, products, user, cart, orders, currentShop,
+            shops, products, user, cart, orders, currentShop, loading,
             loginShop, logout, addToCart, updateQuantity, checkout, verifyOrder,
             cartTotal, cartCount, setProducts, toggleProductStatus
         }}>

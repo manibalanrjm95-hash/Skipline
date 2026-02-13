@@ -5,8 +5,24 @@ import { ShoppingCart, Package, CreditCard, ChevronRight, Zap, TrendingUp, Bell 
 import BottomNav from '../components/BottomNav';
 
 const Dashboard = () => {
-    const { user, currentShop, cartCount, cartTotal } = useStore();
+    const { user, currentShop, cartCount, cartTotal, loading } = useStore();
     const navigate = useNavigate();
+
+    if (loading) {
+        return (
+            <div className="app-container mesh-bg flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center gap-6 animate-pulse">
+                    <div className="bg-primary p-4 rounded-3xl shadow-lg">
+                        <Zap size={48} className="text-white" />
+                    </div>
+                    <div className="text-center">
+                        <h2 className="text-grey-900 font-extrabold text-2xl">SkipLine</h2>
+                        <p className="body-sm text-grey-500 font-bold tracking-widest mt-2 uppercase">Syncing Session...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app-container mesh-bg flex flex-col">

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, TrendingUp, TrendingDown, Clock, Users, Zap, Search, Calendar, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, TrendingUp, TrendingDown, Clock, Users, Zap, Search, Calendar, ChevronRight, Loader2 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const Sidebar = () => (
@@ -34,7 +34,15 @@ const Sidebar = () => (
 );
 
 const Analytics = () => {
-    const { products, orders } = useStore();
+    const { products, orders, loading } = useStore();
+
+    if (loading) {
+        return (
+            <div className="admin-content mesh-bg flex items-center justify-center">
+                <Loader2 size={40} className="text-primary animate-spin" />
+            </div>
+        );
+    }
 
     const chartData = [1200, 1900, 1500, 2500, 2100, 3200, 4250];
     const maxVal = Math.max(...chartData);
