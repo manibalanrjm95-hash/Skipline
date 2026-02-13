@@ -42,10 +42,10 @@ const Cart = () => {
                                     <div className="flex flex-col gap-1">
                                         <p className="body-sm font-bold text-grey-900">{item.product_name}</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="caption text-grey-500 font-medium">₹{item.price} per unit</span>
+                                            <span className="caption text-grey-500 font-medium">₹{Number(item.price || 0).toFixed(2)} per unit</span>
                                             <span className="p-1 rounded bg-grey-100 text-[10px] font-bold">x{item.quantity}</span>
                                         </div>
-                                        <p className="body-sm text-primary font-extrabold mt-1">₹{item.subtotal.toFixed(2)}</p>
+                                        <p className="body-sm text-primary font-extrabold mt-1">₹{Number(item.subtotal || 0).toFixed(2)}</p>
                                     </div>
 
                                     <div className="flex items-center gap-2 bg-white rounded-xl p-1 border shadow-sm">

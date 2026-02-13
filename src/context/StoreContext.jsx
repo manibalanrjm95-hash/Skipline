@@ -29,8 +29,22 @@ export const StoreProvider = ({ children }) => {
                 const savedCart = localStorage.getItem('skipline_cart');
                 const savedShop = localStorage.getItem('skipline_shop');
 
+                if (savedCart && productsData) {
+                    try {
+                        const parsedCart = JSON.parse(savedCart);
+                        // VITAL: Validate cart items against live Supabase data
+                        // This removes any stale data from old mock versions
+                        const validCart = parsedCart.filter(item =>
+                            productsData.some(p => p.id === item.product_id)
+                        );
+                        setCart(validCart);
+                    } catch (e) {
+                        console.error('Cart parse error:', e);
+                        setCart([]);
+                    }
+                }
+
                 if (savedUser) setUser(JSON.parse(savedUser));
-                if (savedCart) setCart(JSON.parse(savedCart));
                 if (savedShop) setCurrentShop(JSON.parse(savedShop));
             } catch (error) {
                 console.error('Initialization error:', error);
@@ -107,15 +121,15 @@ export const StoreProvider = ({ children }) => {
         if (existingItemIndex > -1) {
             const newCart = [...cart];
             newCart[existingItemIndex].quantity += 1;
-            newCart[existingItemIndex].subtotal = newCart[existingItemIndex].quantity * product.price;
+            newCart[existingItemIndex].subtotal = Number(newCart[existingItemIndex].quantity) * Number(product.price);
             setCart(newCart);
         } else {
             setCart([...cart, {
                 product_id: product.id,
                 product_name: product.product_name,
-                price: product.price,
+                price: Number(product.price),
                 quantity: 1,
-                subtotal: product.price
+                subtotal: Number(product.price)
             }]);
         }
         return { success: true };
@@ -125,7 +139,7 @@ export const StoreProvider = ({ children }) => {
         const newCart = cart.map(item => {
             if (item.product_id === productId) {
                 const newQty = Math.max(0, item.quantity + delta);
-                return { ...item, quantity: newQty, subtotal: newQty * item.price };
+                return { ...item, quantity: newQty, subtotal: newQty * Number(item.price) };
             }
             return item;
         }).filter(item => item.quantity > 0);
@@ -217,8 +231,8 @@ export const StoreProvider = ({ children }) => {
         }
     };
 
-    const cartTotal = cart.reduce((acc, item) => acc + item.subtotal, 0);
-    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+    const cartTotal = cart.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0);
+    const cartCount = cart.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
 
     return (
         <StoreContext.Provider value={{
