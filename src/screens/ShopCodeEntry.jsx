@@ -30,77 +30,79 @@ const ShopCodeEntry = () => {
     };
 
     return (
-        <div className="m3-scaffold items-center">
-            <header className="m3-top-app-bar w-full">
+        <div className="max-app-width flex flex-col justify-center page-padding">
+            {/* Minimal Header */}
+            <div className="absolute top-8 left-5">
                 <button
-                    className="w-10 h-10 flex items-center justify-center state-layer rounded-full"
+                    className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
                     onClick={() => navigate('/')}
                 >
                     <ArrowLeft size={24} />
                 </button>
-            </header>
+            </div>
 
-            <main className="m3-content w-full max-w-sm flex flex-col items-center">
-                <div className="mb-10 text-center flex flex-col items-center">
-                    <div className="m3-card card-filled w-16 h-16 flex items-center justify-center mb-6 text-primary">
-                        <Store size={32} />
+            <div className="w-full flex flex-col items-center">
+                {/* Soft Neutral Circle Icon */}
+                <div className="w-16 h-16 bg-bg-app border border-border rounded-full flex items-center justify-center mb-6 text-primary">
+                    <Store size={32} strokeWidth={1.5} />
+                </div>
+
+                <div className="text-center mb-10">
+                    <h1 className="h1 text-text-primary mb-2">Find Store</h1>
+                    <p className="body text-text-secondary">Enter the shop code to start shopping.</p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="w-full section-gap">
+                    <div className="flex flex-col gap-2">
+                        <label className="label text-text-secondary uppercase tracking-widest px-1">Shop Code</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. SL-001"
+                            value={code}
+                            onChange={(e) => {
+                                setCode(e.target.value.toUpperCase());
+                                setError('');
+                            }}
+                            className={`input-v2 text-center text-xl font-bold uppercase ${error ? 'border-error' : ''}`}
+                            autoFocus
+                        />
+                        {error && (
+                            <div className="flex items-center gap-2 text-error px-1 mt-1">
+                                <AlertCircle size={14} />
+                                <span className="small font-medium">{error}</span>
+                            </div>
+                        )}
                     </div>
-                    <h2 className="headline-medium text-grey-900 mb-2">Find your store</h2>
-                    <p className="body-large text-grey-600">Enter the identifier for this location.</p>
-                </div>
 
-                <div className="m3-card card-elevated w-full relative overflow-hidden p-8">
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-                        <div className="space-y-2">
-                            <label className="label-medium text-grey-500 uppercase tracking-widest ml-1">Store Identity</label>
-                            <input
-                                type="text"
-                                placeholder="SL-00-000"
-                                className={`m3-text-field text-center text-3xl font-bold uppercase ${error ? 'border-error' : ''}`}
-                                value={code}
-                                onChange={(e) => {
-                                    setCode(e.target.value.toUpperCase());
-                                    setError('');
-                                }}
-                                autoFocus
-                                maxLength={10}
-                            />
-                            {error && (
-                                <div className="flex items-center justify-center gap-2 text-md-sys-color-error mt-2">
-                                    <AlertCircle size={14} />
-                                    <span className="label-medium font-bold">{error}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="m3-btn btn-filled w-full h-14 shadow-lg"
-                            disabled={loading || !code}
-                        >
-                            {loading ? <Loader2 size={24} className="animate-spin" /> : 'ACCESS STORE'}
-                        </button>
-                    </form>
-                </div>
-
-                {/* Nearby Store Suggestion as a Chip/Card */}
-                <div className="mt-12 w-full">
-                    <p className="label-medium text-grey-500 text-center mb-4 uppercase tracking-widest">Closest to you</p>
                     <button
-                        className="m3-card card-outlined w-full flex items-center gap-4 state-layer"
+                        type="submit"
+                        className="btn-v2 btn-v2-primary"
+                        disabled={loading || !code}
+                    >
+                        {loading ? <Loader2 size={24} className="animate-spin" /> : 'Enter Shop'}
+                    </button>
+                </form>
+
+                {/* Nearby Store Card */}
+                <div className="mt-12 w-full">
+                    <p className="label text-text-secondary uppercase tracking-widest mb-4 px-1">Nearby Stores</p>
+                    <button
+                        className="card-v2 w-full flex items-center justify-between group"
                         onClick={() => setCode('SL-TN-001')}
                     >
-                        <div className="w-12 h-12 bg-md-sys-color-primary-container rounded-lg flex items-center justify-center text-primary">
-                            <MapPin size={24} />
+                        <div className="flex items-center gap-4 text-left">
+                            <div className="w-10 h-10 border border-border rounded-full flex items-center justify-center text-secondary">
+                                <MapPin size={20} />
+                            </div>
+                            <div>
+                                <p className="body font-bold text-text-primary">SkipLine Urapakkam</p>
+                                <p className="small text-text-secondary uppercase">SL-TN-001</p>
+                            </div>
                         </div>
-                        <div className="text-left flex-1 min-w-0">
-                            <p className="title-small text-grey-900 font-bold truncate">SkipLine Urapakkam</p>
-                            <p className="label-medium text-grey-500 uppercase tracking-wider">SL-TN-001</p>
-                        </div>
-                        <ChevronRight size={20} className="text-grey-300" />
+                        <ChevronRight size={20} className="text-border group-hover:text-text-primary transition-colors" />
                     </button>
                 </div>
-            </main>
+            </div>
         </div>
     );
 };

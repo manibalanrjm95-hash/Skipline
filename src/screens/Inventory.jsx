@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { Search, Edit3, Eye, EyeOff, Package, X, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, Edit3, Eye, EyeOff, Package, X, Check, AlertCircle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import Skeleton from '../components/Skeleton';
 import AdminSidebar from '../components/AdminSidebar';
@@ -11,17 +11,16 @@ const Inventory = () => {
     const [editingProduct, setEditingProduct] = useState(null);
     const [editForm, setEditForm] = useState({ price: 0, stock: 0 });
     const { addToast } = useToast();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     if (loading) {
         return (
-            <div className="m3-scaffold flex-row">
-                <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <div className="ml-24 flex-1 p-8">
-                    <Skeleton className="h-10 w-48 mb-8" />
-                    <Skeleton className="h-14 w-full rounded-xl mb-12" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
+            <div className="flex bg-bg-app min-h-screen">
+                <AdminSidebar />
+                <div className="flex-1 p-10">
+                    <Skeleton className="h-10 w-48 mb-10" />
+                    <Skeleton className="h-14 w-full rounded-2xl mb-12" />
+                    <div className="grid grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
                     </div>
                 </div>
             </div>
@@ -53,128 +52,113 @@ const Inventory = () => {
     );
 
     return (
-        <div className="m3-scaffold flex-row">
-            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <div className="flex bg-bg-app min-h-screen">
+            <AdminSidebar />
 
-            <div className="ml-24 flex-1 p-8">
-                {/* M3 Header */}
-                <header className="flex justify-between items-center mb-10">
+            <div className="flex-1 p-10 overflow-y-auto">
+                <header className="flex justify-between items-end mb-12">
                     <div>
-                        <h1 className="headline-medium text-grey-900">Inventory</h1>
-                        <p className="label-medium text-grey-500 uppercase tracking-widest mt-1">Stock Management</p>
+                        <h1 className="h1 text-text-primary">Stock Control</h1>
+                        <p className="label-medium text-text-secondary uppercase tracking-widest mt-1">Inventory Management</p>
                     </div>
-                    <div className="m3-chip card-outlined h-10 px-4">
-                        <Package size={18} className="mr-2" />
-                        <span className="label-medium font-bold text-grey-700">{products.length} PRODUCTS</span>
+                    <div className="label font-bold text-secondary bg-secondary/10 px-4 py-2 rounded-full border border-secondary/20">
+                        {products.length} Items Indexed
                     </div>
                 </header>
 
-                {/* M3 Search Bar */}
+                {/* Search Bar */}
                 <div className="relative mb-12">
                     <input
                         type="text"
-                        placeholder="Search products by name or code..."
-                        className="m3-text-field pl-14"
+                        placeholder="Search inventory by name, code or category..."
+                        className="input-v2 pl-14"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-grey-400">
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-text-secondary opacity-40">
                         <Search size={22} />
                     </div>
                 </div>
 
-                {/* Product Multi-Grid */}
+                {/* Simplified Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-24">
                     {filteredProducts.map((p) => (
-                        <div key={p.id} className="m3-card card-elevated flex flex-col gap-6 group relative border border-md-sys-color-outline-variant">
-                            <div className="flex items-start justify-between">
+                        <div key={p.id} className="card-v2 flex flex-col gap-6 group hover:border-secondary transition-colors">
+                            <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 bg-md-sys-color-surface-variant rounded-xl flex items-center justify-center text-grey-400 group-hover:text-primary transition-colors">
-                                        <Package size={28} />
+                                    <div className="w-12 h-12 bg-bg-app border border-border rounded-xl flex items-center justify-center text-text-secondary group-hover:text-primary transition-colors">
+                                        <Package size={24} />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="title-medium text-grey-900 truncate">{p.product_name}</h3>
-                                        <p className="label-medium text-grey-500 uppercase tracking-widest">{p.product_code}</p>
+                                        <p className="body font-bold text-text-primary truncate">{p.product_name}</p>
+                                        <p className="label text-text-secondary uppercase">{p.product_code}</p>
                                     </div>
                                 </div>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center state-layer ${p.barcode_enabled ? 'text-success' : 'text-grey-300'}`}>
-                                    {p.barcode_enabled ? <Check size={20} /> : <EyeOff size={20} />}
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${p.barcode_enabled ? 'text-success bg-success/10' : 'text-border bg-bg-app'}`}>
+                                    {p.barcode_enabled ? <Check size={16} /> : <EyeOff size={16} />}
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between bg-md-sys-color-surface-variant p-4 rounded-xl">
+                            <div className="flex items-center justify-between p-4 bg-bg-app border border-border rounded-xl">
                                 <div>
-                                    <p className="label-medium text-grey-500 uppercase tracking-widest mb-1">Price</p>
-                                    <p className="title-large text-grey-900 font-bold">₹{p.price}</p>
+                                    <p className="label text-text-secondary uppercase mb-0.5">Price</p>
+                                    <p className="h3 font-bold text-text-primary">₹{p.price}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="label-medium text-grey-500 uppercase tracking-widest mb-1">Stock</p>
-                                    <div className={`m3-chip border-none h-6 px-2 ${p.stock < 10 ? 'bg-md-sys-color-error-container text-md-sys-color-on-error-container' : 'btn-tonal'}`}>
-                                        <span className="text-[10px] font-bold">{p.stock} UNITS</span>
-                                    </div>
+                                    <p className="label text-text-secondary uppercase mb-0.5">Stock</p>
+                                    <span className={`label font-bold ${p.stock < 10 ? 'text-error' : 'text-text-primary'}`}>
+                                        {p.stock} Units
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Hover Action Overlay (M3 Style) */}
-                            <div className="absolute inset-0 bg-md-sys-color-surface/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-[var(--md-sys-shape-md)] z-10 border border-primary/20 shadow-lg">
+                            <div className="flex gap-3">
                                 <button
-                                    className="m3-btn btn-filled h-14 w-14 p-0 shadow-md"
+                                    className="btn-v2 btn-v2-outline h-12 flex-1 text-sm"
                                     onClick={() => handleEdit(p)}
                                 >
-                                    <Edit3 size={24} />
+                                    <Edit3 size={16} className="mr-2" /> Edit
                                 </button>
                                 <button
-                                    className={`m3-btn h-14 w-14 p-0 shadow-md ${p.barcode_enabled ? 'btn-tonal text-md-sys-color-error' : 'btn-filled'}`}
+                                    className={`btn-v2 h-12 flex-1 text-sm ${p.barcode_enabled ? 'bg-error/10 text-error border border-error/20' : 'btn-v2-primary'}`}
                                     onClick={() => toggleProductStatus(p.id)}
                                 >
-                                    {p.barcode_enabled ? <EyeOff size={24} /> : <Eye size={24} />}
+                                    {p.barcode_enabled ? 'Disable' : 'Enable'}
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {filteredProducts.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-32 opacity-40">
-                        <Search size={64} className="text-grey-300 mb-4" />
-                        <p className="body-large text-grey-500">No products found matching your search</p>
-                    </div>
-                )}
-
-                {/* M3 Edit Modal */}
+                {/* Edit Modal */}
                 {editingProduct && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-6">
-                        <div className="m3-card card-elevated w-full max-w-sm p-8 shadow-2xl relative animate-slide-up border border-md-sys-color-outline-variant">
+                    <div className="fixed inset-0 bg-text-primary/10 backdrop-blur-sm flex items-center justify-center z-[100] p-6">
+                        <div className="card-v2 w-full max-w-sm p-8 shadow-2xl relative animate-slide-up border-2 border-border/80">
                             <div className="flex justify-between items-start mb-8">
                                 <div>
-                                    <p className="label-medium text-primary font-bold uppercase tracking-widest mb-1">Edit Product</p>
-                                    <h2 className="title-large text-grey-900">{editingProduct.product_name}</h2>
-                                    <p className="label-medium text-grey-500 uppercase">{editingProduct.product_code}</p>
+                                    <p className="label font-bold text-primary uppercase mb-1">Update Stock</p>
+                                    <h2 className="h2 text-text-primary">{editingProduct.product_name}</h2>
                                 </div>
-                                <button
-                                    className="w-10 h-10 flex items-center justify-center state-layer rounded-full"
-                                    onClick={() => setEditingProduct(null)}
-                                >
-                                    <X size={20} />
+                                <button onClick={() => setEditingProduct(null)} className="text-text-secondary">
+                                    <X size={24} />
                                 </button>
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="label-medium text-grey-500 uppercase tracking-widest ml-1">Sale Price (₹)</label>
+                            <div className="section-gap">
+                                <div className="flex flex-col gap-2">
+                                    <label className="label text-text-secondary uppercase tracking-widest ml-1">Sale Price (₹)</label>
                                     <input
                                         type="number"
-                                        className="m3-text-field text-xl font-bold"
+                                        className="input-v2 font-bold"
                                         value={editForm.price}
                                         onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                                        autoFocus
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="label-medium text-grey-500 uppercase tracking-widest ml-1">Stock Level</label>
+                                <div className="flex flex-col gap-2">
+                                    <label className="label text-text-secondary uppercase tracking-widest ml-1">Current Stock</label>
                                     <input
                                         type="number"
-                                        className="m3-text-field text-xl font-bold"
+                                        className="input-v2 font-bold"
                                         value={editForm.stock}
                                         onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
                                     />
@@ -182,18 +166,8 @@ const Inventory = () => {
                             </div>
 
                             <div className="flex gap-4 mt-10">
-                                <button
-                                    className="m3-btn btn-tonal flex-1 h-14 font-bold"
-                                    onClick={() => setEditingProduct(null)}
-                                >
-                                    CANCEL
-                                </button>
-                                <button
-                                    className="m3-btn btn-filled flex-1 h-14 font-bold shadow-md"
-                                    onClick={handleSave}
-                                >
-                                    SAVE
-                                </button>
+                                <button className="btn-v2 btn-v2-outline flex-1" onClick={() => setEditingProduct(null)}>Cancel</button>
+                                <button className="btn-v2 btn-v2-primary flex-1" onClick={handleSave}>Save</button>
                             </div>
                         </div>
                     </div>

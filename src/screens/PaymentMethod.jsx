@@ -1,108 +1,88 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, QrCode, CreditCard, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { redirectToUPI } from '../utils/UPIIntentHandler';
+import { ArrowLeft, Wallet, CreditCard, ChevronRight, CheckCircle2 } from 'lucide-react';
+import BottomNav from '../components/BottomNav';
 
 const PaymentMethod = () => {
+    const [method, setMethod] = useState('UPI'); // Default to UPI
+    const { cartTotal } = useStore();
     const navigate = useNavigate();
-    const { cartTotal, currentShop, currentOrderId, checkout } = useStore();
-    const [selectedMethod, setSelectedMethod] = useState('qr'); // 'qr' or 'pos'
 
-    const handleConfirmPayment = async () => {
-        if (!currentOrderId) {
-            const result = await checkout();
-            if (!result.success) {
-                alert("Failed to create order. Please try again.");
-                return;
-            }
-        }
+    const paymentOptions = [
+        { id: 'UPI', name: 'UPI Payment', description: 'GPay, PhonePe, Paytm', icon: Wallet },
+        { id: 'COUNTER', name: 'Cash at Counter', description: 'Pay with physical cash', icon: CreditCard },
+    ];
 
-        if (selectedMethod === 'qr') {
-            const mockOrder = { total_amount: cartTotal, id: currentOrderId };
-            redirectToUPI(currentShop, mockOrder);
-            setTimeout(() => navigate('/payment-qr'), 1000);
-        } else {
-            navigate('/payment-counter');
-        }
+    const formatCurrency = (amount) => {
+        const value = Number(amount);
+        return isNaN(value) ? '₹0.00' : `₹${value.toFixed(2)}`;
     };
 
     return (
-        <div className="m3-scaffold">
-            {/* M3 Top App Bar */}
-            <header className="m3-top-app-bar shadow-sm">
-                <button
-                    className="w-10 h-10 flex items-center justify-center state-layer rounded-full"
-                    onClick={() => navigate('/cart')}
-                >
-                    <ArrowLeft size={24} className="text-grey-900" />
-                </button>
-                <h2 className="title-large text-grey-900">Payment</h2>
+        <div className="max-app-width flex flex-col bg-bg-app">
+            <header className="page-padding pt-8 pb-4 bg-bg-app sticky top-0 z-20">
+                <div className="flex items-center gap-4">
+                    <button
+                        className="w-10 h-10 flex items-center justify-center text-text-secondary"
+                        onClick={() => navigate(-1)}
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="h1 text-text-primary">Payment</h1>
+                </div>
             </header>
 
-            <main className="m3-content">
-                {/* Total Payable Summary Card (Filled) */}
-                <div className="m3-card card-filled flex flex-col items-center text-center p-8 mb-8">
-                    <p className="label-medium text-grey-500 uppercase tracking-widest mb-2">Total Payable</p>
-                    <h1 className="display-medium text-grey-900 mb-2">₹{Number(cartTotal || 0).toFixed(0)}</h1>
-                    <div className="m3-chip bg-md-sys-color-primary-container text-md-sys-color-on-primary-container border-none h-6 px-3">
-                        <ShieldCheck size={14} className="mr-2" />
-                        <span className="text-[10px] font-bold">SECURE CHECKOUT</span>
+            <main className="page-padding section-gap pb-48">
+                {/* Total Summary Card */}
+                <div className="card-v2 bg-secondary text-white border-none flex flex-col gap-1 items-center justify-center py-8 text-center ring-4 ring-secondary/10">
+                    <p className="label font-bold uppercase tracking-[0.2em] opacity-80 text-white">Total Payable</p>
+                    <h2 className="h1 text-white" style={{ fontSize: '36px' }}>{formatCurrency(cartTotal)}</h2>
+                </div>
+
+                <div>
+                    <p className="label text-text-secondary uppercase tracking-widest mb-4 px-1">Select Payment Method</p>
+                    <div className="flex flex-col gap-3">
+                        {paymentOptions.map((opt) => (
+                            <button
+                                key={opt.id}
+                                className={`card-v2 w-full flex items-center justify-between transition-all border-2 ${method === opt.id ? 'border-secondary shadow-md' : 'border-border'
+                                    }`}
+                                onClick={() => setMethod(opt.id)}
+                            >
+                                <div className="flex items-center gap-4 text-left">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${method === opt.id ? 'bg-secondary text-white' : 'bg-bg-app text-text-secondary border border-border'
+                                        }`}>
+                                        <opt.icon size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="body font-bold text-text-primary">{opt.name}</p>
+                                        <p className="small text-text-secondary">{opt.description}</p>
+                                    </div>
+                                </div>
+                                {method === opt.id && (
+                                    <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                                        <CheckCircle2 size={24} />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
                     </div>
-                </div>
-
-                <div className="mb-6">
-                    <p className="title-medium text-grey-900 mb-4">Choose Payment Mode</p>
-
-                    {/* Simplified M3 Segmented Button Logic using Cards/Buttons */}
-                    <div className="flex w-full bg-md-sys-color-surface-variant rounded-full p-1 border border-md-sys-color-outline-variant">
-                        <button
-                            onClick={() => setSelectedMethod('qr')}
-                            className={`flex-1 h-12 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all ${selectedMethod === 'qr'
-                                    ? 'bg-md-sys-color-primary text-white shadow-md'
-                                    : 'text-grey-600'
-                                }`}
-                        >
-                            <QrCode size={20} />
-                            Pay via UPI
-                        </button>
-                        <button
-                            onClick={() => setSelectedMethod('pos')}
-                            className={`flex-1 h-12 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all ${selectedMethod === 'pos'
-                                    ? 'bg-md-sys-color-primary text-white shadow-md'
-                                    : 'text-grey-600'
-                                }`}
-                        >
-                            <CreditCard size={20} />
-                            At Counter
-                        </button>
-                    </div>
-                </div>
-
-                {/* Method Description Card (Elevated) */}
-                <div className="m3-card card-elevated mb-12">
-                    <h3 className="title-medium text-grey-900 mb-2">
-                        {selectedMethod === 'qr' ? 'UPI Deep Link' : 'Counter Payment'}
-                    </h3>
-                    <p className="body-medium text-grey-600">
-                        {selectedMethod === 'qr'
-                            ? 'Tap confirm to open your favorite UPI app (GPay, PhonePe, etc.) to complete the payment.'
-                            : 'Visit the store counter and show your order ID to pay via Cash, Card, or Store QR.'}
-                    </p>
-                </div>
-
-                <div className="mt-auto">
-                    <button
-                        className="m3-btn btn-filled w-full h-16 text-lg font-bold shadow-lg"
-                        onClick={handleConfirmPayment}
-                    >
-                        CONFIRM & CONTINUE
-                    </button>
-                    <p className="label-medium text-grey-400 text-center mt-4 uppercase tracking-widest">
-                        Secured by SkipLine Payments
-                    </p>
                 </div>
             </main>
+
+            {/* Sticky Bottom Action */}
+            <div className="sticky-bar-v2 flex flex-col gap-6">
+                <button
+                    className="btn-v2 btn-v2-primary flex justify-between items-center px-8"
+                    onClick={() => navigate('/checkout')}
+                >
+                    <span>Confirm Order</span>
+                    <ChevronRight size={24} />
+                </button>
+            </div>
+
+            <BottomNav />
         </div>
     );
 };
