@@ -1,7 +1,47 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/entry(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/scan(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cart(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/checkout(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment-method(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment-qr(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment-counter(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/exit(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/thanks(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin(.*)",
       "destination": "/index.html"
     }
   ]
