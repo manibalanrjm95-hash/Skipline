@@ -1,61 +1,57 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Zap, ShieldCheck, ArrowRight } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Zap } from 'lucide-react';
 
 const Landing = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="app-container mesh-bg overflow-hidden flex flex-col">
-            {/* Abstract background elements */}
-            <div className="absolute" style={{ top: '-10%', right: '-10%', width: '300px', height: '300px', background: 'var(--color-primary-glow)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }}></div>
-            <div className="absolute" style={{ bottom: '20%', left: '-10%', width: '250px', height: '250px', background: 'var(--color-secondary-glow)', borderRadius: '50%', filter: 'blur(80px)', zIndex: 0 }}></div>
+        <div className="app-container justify-center relative overflow-hidden">
+            {/* Background Decor */}
+            <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-primary/5 to-transparent -z-10"></div>
+            <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/3 -left-16 w-64 h-64 bg-secondary/5 rounded-full blur-3xl"></div>
 
-            <div className="flex-1 flex flex-col justify-center items-center screen-padding relative animate-fade" style={{ zIndex: 1 }}>
-                <div className="logo-container bg-primary mb-8 pulse-soft">
-                    <ShoppingBag size={48} color="white" strokeWidth={2.5} />
+            <div className="screen-padding flex flex-col items-center text-center relative z-10">
+                <div className="mb-12 relative">
+                    <div className="w-24 h-24 bg-white rounded-[32px] flex items-center justify-center shadow-lg border border-white/50 mb-8 mx-auto relative z-10">
+                        <ShoppingBag size={40} className="text-primary" strokeWidth={2.5} />
+                    </div>
+                    {/* Floating elements behind logo */}
+                    <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-white p-3 rounded-2xl shadow-md animate-bounce" style={{ animationDuration: '3s' }}>
+                        <Zap size={20} className="text-warning" fill="currentColor" />
+                    </div>
                 </div>
 
-                <div className="text-center mb-12">
-                    <h1 className="mb-4">Skip the Line,<br /><span className="text-primary">Shop with Ease.</span></h1>
-                    <p className="body-lg opacity-80">Experience the future of retail with our instant self-checkout solution.</p>
+                <div className="mb-12">
+                    <h1 className="text-display text-grey-900 mb-6">
+                        Skip the <span className="text-primary">Line.</span>
+                    </h1>
+                    <p className="body-lg text-grey-500 max-w-xs mx-auto leading-relaxed">
+                        The fastest way to shop. <br />Scan, Pay, and Go in seconds.
+                    </p>
                 </div>
 
-                <div className="flex flex-col gap-4 w-full">
+                <div className="w-full max-w-xs flex flex-col gap-5">
                     <button
-                        className="btn btn-primary w-full py-5 text-lg"
+                        className="btn btn-primary w-full py-5 text-lg shadow-primary hover:scale-105 transition-transform"
                         onClick={() => navigate('/entry')}
                     >
-                        Get Started <ArrowRight size={20} />
+                        Start Shopping <ArrowRight size={24} />
                     </button>
 
                     <button
-                        className="btn btn-outline w-full py-5 text-lg glass"
-                        onClick={() => navigate('/admin')}
+                        className="btn btn-ghost w-full py-3 text-sm font-semibold tracking-wide"
+                        onClick={() => navigate('/admin/login')}
                     >
                         Admin Portal
                     </button>
                 </div>
-
-                <div className="mt-12 flex items-center gap-8 opacity-60">
-                    <div className="flex flex-col items-center gap-1">
-                        <Zap size={20} className="text-primary" />
-                        <span className="caption">Instant</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                        <ShieldCheck size={20} className="text-secondary" />
-                        <span className="caption">Secure</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                        <ShoppingBag size={20} className="text-success" />
-                        <span className="caption">Contactless</span>
-                    </div>
-                </div>
             </div>
 
-            <p className="caption text-grey-400 text-center absolute w-full pb-8" style={{ bottom: 0 }}>
-                Powered by SkipLine Engine V3.0
-            </p>
+            <div className="absolute bottom-8 left-0 w-full text-center">
+                <p className="caption text-grey-300">v1.3.0 • Helixion UI</p>
+            </div>
         </div>
     );
 };

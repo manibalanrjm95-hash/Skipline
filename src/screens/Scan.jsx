@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ArrowLeft, Package, Plus, Search, AlertCircle, CheckCircle, Camera, CameraOff, Keyboard } from 'lucide-react';
+import { ArrowLeft, Package, Plus, Search, AlertCircle, CheckCircle, Camera, CameraOff, Keyboard, Zap, X } from 'lucide-react';
 import jsQR from 'jsqr';
 import BottomNav from '../components/BottomNav';
 
@@ -122,133 +122,138 @@ const Scan = () => {
     };
 
     return (
-        <div className="app-container mesh-bg flex flex-col">
-            <div className="screen-padding flex-1 animate-fade flex flex-col" style={{ overflow: 'hidden' }}>
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                        <button className="btn p-3 bg-white rounded-md shadow-sm" onClick={() => { stopCamera(); navigate(-1); }}>
-                            <ArrowLeft size={24} className="text-grey-900" />
-                        </button>
-                        <h2 className="font-bold">Scan Products</h2>
-                    </div>
+        <div className="app-container flex flex-col h-screen overflow-hidden">
+            {/* Camera Viewport (Top Half) */}
+            <div className={`relative w-full ${showManual ? 'h-[40vh]' : 'h-[55vh]'} transition-all duration-300 ease-out flex-shrink-0 bg-black`}>
+                <video
+                    ref={videoRef}
+                    playsInline
+                    muted
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: cameraActive ? 'block' : 'none',
+                    }}
+                />
+
+                {/* Overlay Header */}
+                <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-20 bg-gradient-to-b from-black/50 to-transparent">
                     <button
-                        className={`btn p-3 rounded-lg shadow-sm ${cameraActive ? 'bg-success text-white' : 'bg-grey-100 text-grey-700'}`}
+                        className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white"
+                        onClick={() => { stopCamera(); navigate(-1); }}
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+
+                    <button
+                        className={`px-4 py-2 rounded-full backdrop-blur-md flex items-center gap-2 text-sm font-bold ${cameraActive ? 'bg-white/20 text-white' : 'bg-red-500/80 text-white'}`}
                         onClick={() => cameraActive ? stopCamera() : startCamera()}
                     >
-                        {cameraActive ? <Camera size={20} /> : <CameraOff size={20} />}
+                        {cameraActive ? <><Camera size={16} /> Live</> : <><CameraOff size={16} /> Off</>}
                     </button>
                 </div>
 
-                {/* Camera Feed + QR Detection */}
-                <div className="relative mb-6 shadow-lg overflow-hidden" style={{ borderRadius: 'var(--radius-lg)', height: '220px', background: 'var(--grey-900)' }}>
-                    <video
-                        ref={videoRef}
-                        playsInline
-                        muted
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            borderRadius: 'var(--radius-lg)',
-                            display: cameraActive ? 'block' : 'none',
-                        }}
-                    />
-                    {/* Hidden canvas for QR detection — never visible */}
-                    <canvas ref={canvasRef} style={{ display: 'none' }} />
+                {/* Scan Frame */}
+                {cameraActive && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-white/50 rounded-3xl overflow-hidden z-10">
+                        <div className="w-full h-1 bg-primary shadow-[0_0_20px_rgba(255,68,0,0.8)] animate-[scanLine_2s_infinite_ease-in-out]"></div>
 
-                    {!cameraActive && !cameraError && (
-                        <div className="absolute flex flex-col items-center justify-center gap-4" style={{ inset: 0 }}>
-                            <CameraOff size={40} className="text-grey-400" />
-                            <p className="body-sm text-grey-400 font-medium text-center px-6">Camera off. Tap the camera icon or use manual entry.</p>
-                        </div>
-                    )}
-
-                    {cameraError && (
-                        <div className="absolute flex flex-col items-center justify-center gap-4 p-6" style={{ inset: 0 }}>
-                            <AlertCircle size={40} className="text-warning" />
-                            <p className="body-sm text-grey-400 font-medium text-center">{cameraError}</p>
-                            <button className="btn btn-primary py-2 px-6" onClick={startCamera}>Retry</button>
-                        </div>
-                    )}
-
-                    {/* Scan overlay corners */}
-                    {cameraActive && (
-                        <>
-                            <div className="absolute" style={{ top: '16px', left: '16px', width: '28px', height: '28px', borderLeft: '3px solid var(--color-primary)', borderTop: '3px solid var(--color-primary)' }}></div>
-                            <div className="absolute" style={{ top: '16px', right: '16px', width: '28px', height: '28px', borderRight: '3px solid var(--color-primary)', borderTop: '3px solid var(--color-primary)' }}></div>
-                            <div className="absolute" style={{ bottom: '16px', left: '16px', width: '28px', height: '28px', borderLeft: '3px solid var(--color-primary)', borderBottom: '3px solid var(--color-primary)' }}></div>
-                            <div className="absolute" style={{ bottom: '16px', right: '16px', width: '28px', height: '28px', borderRight: '3px solid var(--color-primary)', borderBottom: '3px solid var(--color-primary)' }}></div>
-                            <div style={{
-                                position: 'absolute', width: '100%', height: '3px',
-                                background: 'var(--color-primary)',
-                                boxShadow: '0 0 15px var(--color-primary), 0 0 30px var(--color-primary)',
-                                animation: 'scanLine 2.5s infinite ease-in-out',
-                            }}></div>
-                        </>
-                    )}
-                </div>
-
-                {/* Feedback Toast */}
-                {status && (
-                    <div className={`flex items-center gap-3 p-4 rounded-lg mb-4 animate-fade ${status.type === 'success' ? 'bg-success-light text-success' : 'bg-error-light text-error'}`}>
-                        {status.type === 'success' ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
-                        <p className="body-sm font-bold">{status.message}</p>
+                        {/* Corner Accents */}
+                        <div className="absolute top-0 left-0 w-6 h-6 border-l-4 border-t-4 border-white rounded-tl-xl"></div>
+                        <div className="absolute top-0 right-0 w-6 h-6 border-r-4 border-t-4 border-white rounded-tr-xl"></div>
+                        <div className="absolute bottom-0 left-0 w-6 h-6 border-l-4 border-b-4 border-white rounded-bl-xl"></div>
+                        <div className="absolute bottom-0 right-0 w-6 h-6 border-r-4 border-b-4 border-white rounded-br-xl"></div>
                     </div>
                 )}
 
-                {/* Manual Entry Toggle */}
-                <button
-                    className="flex items-center gap-2 mb-4 self-start"
-                    onClick={() => setShowManual(!showManual)}
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0' }}
-                >
-                    <Keyboard size={18} className="text-primary" />
-                    <span className="body-sm font-bold text-primary">{showManual ? 'Hide manual entry' : 'Enter code manually'}</span>
-                </button>
+                {/* Hidden canvas for QR detection */}
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-                {showManual && (
-                    <form onSubmit={handleScan} className="flex gap-3 mb-6 animate-fade">
-                        <div className="flex-1 bg-grey-100 rounded-lg flex items-center px-4 border border-white">
-                            <Search size={20} className="text-grey-400 mr-2" />
-                            <input
-                                type="text"
-                                placeholder="e.g. SLP-001"
-                                className="border-none bg-transparent py-3"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                style={{ height: 'auto', fontSize: '15px' }}
-                                autoFocus
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary p-3 rounded-lg">
-                            <Plus size={24} />
-                        </button>
-                    </form>
+                {!cameraActive && !cameraError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50">
+                        <CameraOff size={48} className="mb-4 opacity-50" />
+                        <p className="font-medium">Camera Paused</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Bottom Sheet Control (Draggable feel) */}
+            <div className="flex-1 bg-white rounded-t-[32px] -mt-8 relative z-30 flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-hidden">
+                {/* Drag Handle */}
+                <div className="w-full h-8 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-1.5 bg-grey-200 rounded-full"></div>
+                </div>
+
+                {/* Feedback Toast Inline */}
+                {status && (
+                    <div className={`mx-6 mb-4 p-4 rounded-2xl flex items-center gap-3 animate-fade-in ${status.type === 'success' ? 'bg-success-bg text-success' : 'bg-error-bg text-error'}`}>
+                        {status.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                        <p className="font-bold text-sm">{status.message}</p>
+                    </div>
                 )}
 
-                {/* Scrollable Product List */}
-                <div className="flex-1 overflow-y-auto" style={{ paddingBottom: '16px' }}>
-                    <p className="caption text-grey-500 font-bold mb-3">TAP TO ADD</p>
+                {/* Toggle & Manual Input */}
+                <div className="px-6 mb-6 flex-shrink-0">
+                    {!showManual ? (
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-h2 text-grey-900 leading-tight">Quick Add</h3>
+                                <p className="body-sm text-grey-500">Scan code or select below</p>
+                            </div>
+                            <button
+                                className="w-12 h-12 rounded-full bg-grey-100 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
+                                onClick={() => setShowManual(true)}
+                            >
+                                <Keyboard size={24} />
+                            </button>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleScan} className="animate-fade-in">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="caption text-primary">MANUAL ENTRY</span>
+                                <button type="button" onClick={() => setShowManual(false)} className="p-1 rounded-full bg-grey-100"><X size={16} /></button>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-grey-400" size={20} />
+                                    <input
+                                        autoFocus
+                                        value={code}
+                                        onChange={e => setCode(e.target.value)}
+                                        placeholder="Product Code..."
+                                        className="input-field pl-12 py-3 text-base"
+                                    />
+                                </div>
+                                <button type="submit" className="btn btn-primary px-4 rounded-xl">
+                                    <Plus size={24} />
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+
+                {/* Product List */}
+                <div className="flex-1 overflow-y-auto px-6 pb-24">
                     <div className="flex flex-col gap-3">
                         {products.map(p => (
                             <button
                                 key={p.id}
-                                className={`card glass flex items-center justify-between p-4 transition-all ${!p.barcode_enabled ? 'opacity-40 grayscale pointer-events-none' : 'hover:bg-white'}`}
+                                className={`card-floating group hover:border-primary/30 transition-all ${!p.barcode_enabled ? 'opacity-50 grayscale' : ''}`}
                                 onClick={() => processCode(p.product_code)}
                                 disabled={!p.barcode_enabled}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="p-2 rounded-lg bg-light border">
-                                        <Package size={20} className="text-secondary" />
+                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-primary">
+                                        <Zap size={18} fill="currentColor" />
                                     </div>
                                     <div className="text-left">
-                                        <p className="body-sm font-bold">{p.product_name}</p>
-                                        <p className="caption text-grey-500 font-medium">₹{p.price} • {p.product_code}</p>
+                                        <p className="font-bold text-grey-900">{p.product_name}</p>
+                                        <p className="text-xs text-grey-500 font-medium">₹{p.price}</p>
                                     </div>
                                 </div>
-                                <div className="p-2 rounded-md bg-grey-100 text-grey-700">
-                                    <Plus size={18} />
+                                <div className="w-8 h-8 rounded-full bg-grey-100 flex items-center justify-center text-grey-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                                    <Plus size={16} />
                                 </div>
                             </button>
                         ))}

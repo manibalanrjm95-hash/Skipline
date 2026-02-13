@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { QrCode, Download, Share2, CheckCircle, Zap, ShieldCheck, Loader2 } from 'lucide-react';
+import { QrCode, CheckCircle, Zap, ShieldCheck, Loader2 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { supabase } from '../lib/supabase';
 
@@ -9,7 +9,6 @@ const ExitVerification = () => {
     const navigate = useNavigate();
     const { currentOrderId, STATUS } = useStore();
     const [order, setOrder] = React.useState(null);
-    const [polling, setPolling] = React.useState(true);
 
     const orderId = location.state?.orderId || currentOrderId;
 
@@ -36,7 +35,6 @@ const ExitVerification = () => {
     React.useEffect(() => {
         checkStatus();
 
-        // SECTION 9: Real-time status subscription
         const channel = supabase
             .channel(`order-status-${orderId}`)
             .on(
@@ -48,7 +46,6 @@ const ExitVerification = () => {
                     filter: `id=eq.${orderId}`
                 },
                 (payload) => {
-                    console.log('Real-time update received:', payload);
                     setOrder(payload.new);
                     if (payload.new.status === STATUS.EXITED) {
                         navigate('/thanks');
@@ -64,7 +61,7 @@ const ExitVerification = () => {
 
     if (!order) {
         return (
-            <div className="app-container mesh-bg flex items-center justify-center">
+            <div className="app-container mesh-bg flex items-center justify-center h-screen">
                 <Loader2 size={40} className="text-primary animate-spin" />
             </div>
         );
@@ -73,62 +70,59 @@ const ExitVerification = () => {
     const isVerified = order.status === STATUS.VERIFIED || order.status === STATUS.EXITED;
 
     return (
-        <div className="app-container mesh-bg flex flex-col items-center">
-            <div className="screen-padding w-full flex-1 flex flex-col items-center animate-fade">
+        <div className="app-container mesh-bg flex flex-col items-center h-screen">
+            <div className="screen-padding w-full flex-1 flex flex-col items-center justify-center animate-fade">
+
+                {/* Status Header */}
                 <div className="text-center mb-10">
-                    <div className={`tag ${isVerified ? 'tag-success' : 'bg-warning'} text-white px-4 py-2 mb-4 font-bold inline-flex items-center gap-2 rounded-full`}>
+                    <div className={`tag ${isVerified ? 'bg-success text-white' : 'bg-warning text-warning-content animate-pulse'} px-4 py-2 mb-4 font-bold inline-flex items-center gap-2 rounded-full shadow-md`}>
                         {isVerified ? <CheckCircle size={16} /> : <Loader2 size={16} className="animate-spin" />}
-                        {isVerified ? 'EXIT APPROVED' : 'WAITING FOR STAFF VERIFICATION'}
+                        {isVerified ? 'PAYMENT VERIFIED' : 'VERIFYING PAYMENT'}
                     </div>
-                    <h1 className="mb-2">{isVerified ? 'You’re All Set!' : 'Final Step!'}</h1>
+                </div>
+
+                {/* Exit QR Card */}
+                <div className="relative mb-10">
+                    <div className="bg-white p-6 rounded-[32px] shadow-2xl relative z-10">
+                        <QrCode size={200} className={`transition-all duration-500 ${isVerified ? 'text-grey-900 opacity-100' : 'text-grey-300 opacity-50 blur-sm'}`} />
+                        {!isVerified && (
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                                <p className="text-center font-bold text-grey-500 bg-white/80 px-4 py-2 rounded-xl backdrop-blur-sm">Wait for Approval</p>
+                            </div>
+                        )}
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-xl shadow-md border border-grey-100 flex items-center gap-2 whitespace-nowrap">
+                            <span className="font-mono font-bold text-lg text-grey-900 tracking-wider">#{orderId.slice(-4)}</span>
+                        </div>
+                    </div>
+                    {/* Glow effect when verified */}
+                    {isVerified && <div className="absolute inset-0 bg-success blur-2xl opacity-20 rounded-full animate-pulse z-0"></div>}
+                </div>
+
+                <div className="text-center max-w-xs mb-10">
+                    <h2 className="text-2xl font-extrabold text-grey-900 mb-2">{isVerified ? 'You exist good to go!' : 'Show to Staff'}</h2>
                     <p className="body-lg text-grey-500">
-                        {isVerified ? 'Thank you for shopping with SkipLine.' : 'Please wait for staff to verify your payment.'}
+                        {isVerified ? 'Show this QR code at the exit gate to leave.' : 'Please show your screen to the store staff for verification.'}
                     </p>
                 </div>
 
-                <div className="qr-container glass-dark mb-10 p-10 relative shadow-lg">
-                    {/* QR Decorative Corners */}
-                    <div className="absolute" style={{ top: '15px', left: '15px', width: '40px', height: '40px', borderLeft: '4px solid var(--color-primary)', borderTop: '4px solid var(--color-primary)', borderRadius: '12px 0 0 0' }}></div>
-                    <div className="absolute" style={{ top: '15px', right: '15px', width: '40px', height: '40px', borderRight: '4px solid var(--color-primary)', borderTop: '4px solid var(--color-primary)', borderRadius: '0 12px 0 0' }}></div>
-                    <div className="absolute" style={{ bottom: '15px', left: '15px', width: '40px', height: '40px', borderLeft: '4px solid var(--color-primary)', borderBottom: '4px solid var(--color-primary)', borderRadius: '0 0 0 12px' }}></div>
-                    <div className="absolute" style={{ bottom: '15px', right: '15px', width: '40px', height: '40px', borderRight: '4px solid var(--color-primary)', borderBottom: '4px solid var(--color-primary)', borderRadius: '0 0 12px 0' }}></div>
-
-                    <QrCode size={220} className="text-white opacity-95" />
-
-                    <div className="absolute flex flex-col items-center justify-center p-3 bg-primary rounded-xl shadow-lg" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', border: '4px solid white' }}>
-                        <Zap size={24} className="text-white" />
+                {/* Order Summary */}
+                <div className="w-full bg-white/60 backdrop-blur-lg rounded-2xl p-4 flex justify-between items-center border border-white/50">
+                    <div>
+                        <p className="caption text-grey-500 font-bold">TOTAL PAID</p>
+                        <p className="text-xl font-extrabold text-grey-900">₹{order.total_amount.toFixed(2)}</p>
+                    </div>
+                    <div className="h-8 w-[1px] bg-grey-300"></div>
+                    <div>
+                        <p className="caption text-grey-500 font-bold">ITEMS</p>
+                        <p className="text-xl font-extrabold text-grey-900 text-right">{typeof order.items === 'string' ? JSON.parse(order.items).length : order.items.length}</p>
                     </div>
                 </div>
 
-                <div className="card-premium glass w-full flex flex-col gap-6 items-center mb-8 border-l-4 border-l-primary">
-                    <div className="flex flex-col items-center gap-1">
-                        <p className="caption text-grey-500 font-extrabold uppercase tracking-widest">Order ID</p>
-                        <p className="h2 font-extrabold tracking-widest text-primary uppercase">#{orderId.slice(-8)}</p>
-                    </div>
+            </div>
 
-                    <div className="flex w-full gap-3 pt-4 border-t" style={{ borderStyle: 'dashed' }}>
-                        <div className="flex-1 text-center">
-                            <p className="caption text-grey-400 font-bold mb-1 uppercase">Amount Paid</p>
-                            <p className="body-sm font-extrabold text-grey-900">₹{order.total_amount.toFixed(2)}</p>
-                        </div>
-                        <div className="w-[1px] bg-grey-100 h-10"></div>
-                        <div className="flex-1 text-center">
-                            <p className="caption text-grey-400 font-bold mb-1 uppercase">Items</p>
-                            <p className="body-sm font-extrabold text-grey-900">{typeof order.items === 'string' ? JSON.parse(order.items).length : order.items.length}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {isVerified && (
-                    <div className="bg-success bg-opacity-10 p-5 rounded-2xl border border-success border-opacity-20 text-center animate-bounce-soft">
-                        <p className="caption text-success font-extrabold">GATE UNLOCKED • FEEL FREE TO EXIT</p>
-                    </div>
-                )}
-
-                <div className="mt-auto flex items-center gap-2 opacity-40 py-8">
-                    <ShieldCheck size={16} />
-                    <span className="caption font-bold uppercase tracking-widest">SkipLine Core V1 Secure Exit</span>
-                </div>
+            <div className="py-6 flex items-center gap-2 opacity-30">
+                <ShieldCheck size={14} />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">SkipLine Secure Exit</span>
             </div>
         </div>
     );

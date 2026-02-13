@@ -11,7 +11,6 @@ const StoreQR = () => {
     const handleConfirmPayment = async () => {
         if (!currentOrderId) return;
         setLoading(true);
-        // SECTION 7: Update order status to awaiting_verification
         const result = await updateOrderStatus(currentOrderId, STATUS.AWAITING_VERIFICATION);
         if (result.success) {
             navigate('/exit');
@@ -22,52 +21,49 @@ const StoreQR = () => {
     };
 
     return (
-        <div className="app-container mesh-bg flex flex-col">
-            <div className="screen-padding flex-1 animate-fade">
-                <div className="flex items-center gap-4 mb-8">
-                    <button className="btn p-3 bg-white rounded-md shadow-sm" onClick={() => navigate(-1)}>
-                        <ArrowLeft size={24} className="text-grey-900" />
-                    </button>
-                    <h2 className="font-bold">Scan Store QR</h2>
-                </div>
+        <div className="app-container mesh-bg flex flex-col h-screen">
+            <div className="screen-padding flex-1 flex flex-col items-center justify-center animate-fade">
+                <button
+                    className="absolute top-8 left-6 p-2 bg-white rounded-full shadow-sm text-grey-900"
+                    onClick={() => navigate(-1)}
+                >
+                    <ArrowLeft size={24} />
+                </button>
 
-                <div className="flex flex-col items-center text-center gap-6 mt-4">
-                    <div className="bg-white p-8 rounded-[40px] shadow-lg border border-grey-100 relative group overflow-hidden">
-                        <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-5 transition-opacity"></div>
-                        <QrCode size={200} className="text-grey-900" strokeWidth={1} />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="bg-primary text-white p-4 rounded-2xl shadow-xl flex flex-col items-center gap-2">
-                                <Info size={24} />
-                                <span className="caption font-extrabold">PHYSICAL QR ONLY</span>
-                            </div>
-                        </div>
+                <div className="bg-white p-8 rounded-[40px] shadow-xl border border-grey-100 flex flex-col items-center gap-6 mb-10 w-full max-w-xs relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+
+                    <div className="text-center">
+                        <p className="caption text-grey-400 font-bold mb-1">PAYING</p>
+                        <h2 className="text-4xl text-grey-900 font-extrabold">₹{Number(cartTotal).toFixed(2)}</h2>
                     </div>
 
-                    <div className="max-w-xs">
-                        <h3 className="font-extrabold text-grey-900 mb-2">Scan & Pay ₹{Number(cartTotal || 0).toFixed(2)}</h3>
-                        <p className="body-sm text-grey-500 font-medium">Please scan the physical UPI QR code available at the store shelf or entrance to complete your transfer.</p>
+                    <div className="p-4 bg-grey-50 rounded-3xl border-2 border-dashed border-grey-200">
+                        <QrCode size={180} className="text-grey-900" />
                     </div>
 
-                    <div className="w-full card glass bg-opacity-40 flex flex-col gap-4 text-left p-6">
-                        <div className="flex items-start gap-3">
-                            <div className="bg-success bg-opacity-10 p-2 rounded-lg mt-1">
-                                <CheckCircle size={18} className="text-success" />
-                            </div>
-                            <p className="body-sm text-grey-700 font-medium lines-tight">After completing the payment in your UPI app, click the button below to notify our staff.</p>
-                        </div>
+                    <div className="flex items-center gap-2 text-primary bg-primary/10 px-4 py-2 rounded-full">
+                        <Info size={16} fill="currentColor" className="text-primary" />
+                        <span className="text-xs font-bold">Scan Store QR at Counter</span>
                     </div>
                 </div>
 
-                <div className="mt-8 flex flex-col gap-4 pb-10">
-                    <button
-                        className="btn btn-primary w-full py-5 text-lg shadow-lg"
-                        onClick={handleConfirmPayment}
-                        disabled={loading}
-                    >
-                        {loading ? <Loader2 className="animate-spin" size={24} /> : 'I Have Paid'}
-                    </button>
-                    <p className="caption text-center text-grey-400 font-bold">STAFF VERIFICATION REQUIRED AFTER CONFIRMATION</p>
-                </div>
+                <button
+                    className="btn btn-primary w-full max-w-xs py-5 text-lg shadow-lg flex items-center justify-center gap-3 mb-6"
+                    onClick={handleConfirmPayment}
+                    disabled={loading}
+                >
+                    {loading ? <Loader2 className="animate-spin" size={24} /> : (
+                        <>
+                            <CheckCircle size={24} />
+                            I Have Paid
+                        </>
+                    )}
+                </button>
+
+                <p className="caption text-grey-400 font-bold max-w-[200px] text-center leading-relaxed opacity-70">
+                    Click above after completing the payment in your custom UPI app.
+                </p>
             </div>
         </div>
     );

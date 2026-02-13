@@ -32,59 +32,63 @@ const AdminProtectedRoute = ({ children }) => {
   return children;
 };
 
+import { ToastProvider } from './context/ToastContext';
+
 const App = () => {
   return (
-    <StoreProvider>
-      <Router>
-        <Routes>
-          {/* Customer Flow */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/entry" element={<ShopCodeEntry />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
-          <Route path="/scan" element={
-            <ProtectedRoute><Scan /></ProtectedRoute>
-          } />
-          <Route path="/cart" element={
-            <ProtectedRoute><Cart /></ProtectedRoute>
-          } />
-          <Route path="/checkout" element={
-            <ProtectedRoute><Checkout /></ProtectedRoute>
-          } />
-          <Route path="/payment-method" element={
-            <ProtectedRoute><PaymentMethod /></ProtectedRoute>
-          } />
-          <Route path="/payment-qr" element={
-            <ProtectedRoute><StoreQR /></ProtectedRoute>
-          } />
-          <Route path="/payment-counter" element={
-            <ProtectedRoute><POSPayment /></ProtectedRoute>
-          } />
-          <Route path="/exit" element={
-            <ProtectedRoute><ExitVerification /></ProtectedRoute>
-          } />
-          <Route path="/thanks" element={<ThankYou />} />
+    <ToastProvider>
+      <StoreProvider>
+        <Router>
+          <Routes>
+            {/* Customer Flow */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/entry" element={<ShopCodeEntry />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute><Dashboard /></ProtectedRoute>
+            } />
+            <Route path="/scan" element={
+              <ProtectedRoute><Scan /></ProtectedRoute>
+            } />
+            <Route path="/cart" element={
+              <ProtectedRoute><Cart /></ProtectedRoute>
+            } />
+            <Route path="/checkout" element={
+              <ProtectedRoute><Checkout /></ProtectedRoute>
+            } />
+            <Route path="/payment-method" element={
+              <ProtectedRoute><PaymentMethod /></ProtectedRoute>
+            } />
+            <Route path="/payment-qr" element={
+              <ProtectedRoute><StoreQR /></ProtectedRoute>
+            } />
+            <Route path="/payment-counter" element={
+              <ProtectedRoute><POSPayment /></ProtectedRoute>
+            } />
+            <Route path="/exit" element={
+              <ProtectedRoute><ExitVerification /></ProtectedRoute>
+            } />
+            <Route path="/thanks" element={<ThankYou />} />
 
-          {/* Admin Flow */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={
-            <AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>
-          } />
-          <Route path="/admin/inventory" element={
-            <AdminProtectedRoute><Inventory /></AdminProtectedRoute>
-          } />
-          <Route path="/admin/analytics" element={
-            <AdminProtectedRoute><Analytics /></AdminProtectedRoute>
-          } />
-          <Route path="/admin/qrcodes" element={
-            <AdminProtectedRoute><QRCodes /></AdminProtectedRoute>
-          } />
+            {/* Admin Flow */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={
+              <AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>
+            } />
+            <Route path="/admin/inventory" element={
+              <AdminProtectedRoute><Inventory /></AdminProtectedRoute>
+            } />
+            <Route path="/admin/analytics" element={
+              <AdminProtectedRoute><Analytics /></AdminProtectedRoute>
+            } />
+            <Route path="/admin/qrcodes" element={
+              <AdminProtectedRoute><QRCodes /></AdminProtectedRoute>
+            } />
 
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </StoreProvider>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+      </StoreProvider>
+    </ToastProvider>
   );
 };
 
