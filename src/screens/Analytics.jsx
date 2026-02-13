@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, TrendingUp, TrendingDown, Clock, Users, Zap, Search, Calendar, ChevronRight, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, TrendingUp, TrendingDown, Clock, Users, Zap, Search, Calendar, ChevronRight, Loader2, QrCode } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 const Sidebar = () => (
@@ -22,6 +22,9 @@ const Sidebar = () => (
             </Link>
             <Link to="/admin/analytics" className="btn gap-3 justify-start bg-grey-100 text-primary shadow-sm">
                 <BarChart3 size={20} /> <span className="font-bold">Analytics</span>
+            </Link>
+            <Link to="/admin/qrcodes" className="btn gap-3 justify-start shadow-none text-grey-500 hover:bg-light hover:text-primary transition-all">
+                <QrCode size={20} /> <span className="font-medium">QR Gallery</span>
             </Link>
         </div>
 

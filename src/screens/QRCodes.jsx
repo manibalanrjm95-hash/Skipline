@@ -1,8 +1,41 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ArrowLeft, Download, Package, Printer } from 'lucide-react';
+import { ArrowLeft, Download, Package, Printer, Zap, LayoutDashboard, BarChart3, QrCode, Users } from 'lucide-react';
 import ProductQR from '../components/ProductQR';
+
+const Sidebar = () => (
+    <div className="sidebar shadow-lg">
+        <div className="flex items-center gap-3 mb-10 px-2">
+            <div className="bg-primary p-2 rounded-lg shadow-md">
+                <Zap size={20} className="text-white" />
+            </div>
+            <h2 className="text-primary font-extrabold text-xl">SkipLine</h2>
+        </div>
+
+        <div className="flex flex-col gap-2">
+            <p className="caption text-grey-400 font-bold mb-2 ml-2">MAIN MENU</p>
+            <Link to="/admin" className="btn gap-3 justify-start shadow-none text-grey-500 hover:bg-light hover:text-primary transition-all">
+                <LayoutDashboard size={20} /> <span className="font-medium">Dashboard</span>
+            </Link>
+            <Link to="/admin/inventory" className="btn gap-3 justify-start shadow-none text-grey-500 hover:bg-light hover:text-primary transition-all">
+                <Package size={20} /> <span className="font-medium">Inventory</span>
+            </Link>
+            <Link to="/admin/analytics" className="btn gap-3 justify-start shadow-none text-grey-500 hover:bg-light hover:text-primary transition-all">
+                <BarChart3 size={20} /> <span className="font-medium">Analytics</span>
+            </Link>
+            <Link to="/admin/qrcodes" className="btn gap-3 justify-start bg-grey-100 text-primary shadow-sm">
+                <QrCode size={20} /> <span className="font-bold">QR Gallery</span>
+            </Link>
+        </div>
+
+        <div className="mt-auto pt-6 border-t" style={{ borderStyle: 'dashed' }}>
+            <Link to="/" className="btn btn-outline w-full gap-2 border-grey-100">
+                Exit Admin
+            </Link>
+        </div>
+    </div>
+);
 
 const QRCodes = () => {
     const { products } = useStore();
@@ -17,8 +50,9 @@ const QRCodes = () => {
     };
 
     return (
-        <div className="app-container mesh-bg">
-            <div className="screen-padding animate-fade">
+        <div className="admin-content mesh-bg">
+            <Sidebar />
+            <div className="p-10 animate-fade">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
