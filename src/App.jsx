@@ -15,6 +15,10 @@ import AdminLogin from './screens/AdminLogin';
 import PaymentMethod from './screens/PaymentMethod';
 import StoreQR from './screens/StoreQR';
 import POSPayment from './screens/POSPayment';
+import AdminDashboard from './screens/AdminDashboard';
+import Inventory from './screens/Inventory';
+import Analytics from './screens/Analytics';
+import QRCodes from './screens/QRCodes';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useStore();
