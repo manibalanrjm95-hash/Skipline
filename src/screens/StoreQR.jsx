@@ -11,6 +11,7 @@ const StoreQR = () => {
     const handleConfirmPayment = async () => {
         if (!currentOrderId) return;
         setLoading(true);
+        // SECTION 7: Update order status to awaiting_verification
         const result = await updateOrderStatus(currentOrderId, STATUS.AWAITING_VERIFICATION);
         if (result.success) {
             navigate('/exit');

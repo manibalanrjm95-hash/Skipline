@@ -26,19 +26,41 @@ const ExitVerification = () => {
             setOrder(data);
 
             if (data.status === STATUS.EXITED) {
-                setPolling(false);
                 navigate('/thanks');
             }
         } catch (err) {
-            console.error('Polling error:', err);
+            console.error('Initial fetch error:', err);
         }
     }, [orderId, navigate, STATUS]);
 
     React.useEffect(() => {
         checkStatus();
-        const interval = setInterval(checkStatus, 3000);
-        return () => clearInterval(interval);
-    }, [checkStatus]);
+
+        // SECTION 9: Real-time status subscription
+        const channel = supabase
+            .channel(`order-status-${orderId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `id=eq.${orderId}`
+                },
+                (payload) => {
+                    console.log('Real-time update received:', payload);
+                    setOrder(payload.new);
+                    if (payload.new.status === STATUS.EXITED) {
+                        navigate('/thanks');
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [orderId, checkStatus, STATUS]);
 
     if (!order) {
         return (

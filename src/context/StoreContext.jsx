@@ -28,9 +28,11 @@ export const StoreProvider = ({ children }) => {
         const init = async () => {
             setLoading(true);
             try {
-                // Fetch basic data
-                const { data: shopsData } = await supabase.from('shops').select('*');
-                const { data: productsData } = await supabase.from('products').select('*');
+                // Fetch basic data - Fetching only in-stock products as per SECTION 3
+                const [{ data: shopsData }, { data: productsData }] = await Promise.all([
+                    supabase.from('shops').select('*'),
+                    supabase.from('products').select('*').gt('stock', 0)
+                ]);
 
                 if (shopsData) setShops(shopsData);
                 if (productsData) setProducts(productsData);
@@ -43,14 +45,11 @@ export const StoreProvider = ({ children }) => {
                 if (savedCart && productsData) {
                     try {
                         const parsedCart = JSON.parse(savedCart);
-                        // VITAL: Validate cart items against live Supabase data
-                        // This removes any stale data from old mock versions
                         const validCart = parsedCart.filter(item =>
                             productsData.some(p => p.id === item.product_id)
                         );
                         setCart(validCart);
                     } catch (e) {
-                        console.error('Cart parse error:', e);
                         setCart([]);
                     }
                 }
@@ -91,15 +90,19 @@ export const StoreProvider = ({ children }) => {
 
     const loginShop = async (shopCode) => {
         try {
+            // SECTION 2: Fetch shop by shop code
             const { data: shop, error } = await supabase
                 .from('shops')
                 .select('*')
                 .eq('shop_code', shopCode)
-                .eq('active_status', true)
                 .single();
 
             if (error || !shop) {
-                return { success: false, error: 'Invalid or inactive shop code' };
+                return { success: false, error: 'Invalid Shop' };
+            }
+
+            if (shop.active_status === false) {
+                return { success: false, error: 'Shop inactive' };
             }
 
             const newUser = {
@@ -134,22 +137,19 @@ export const StoreProvider = ({ children }) => {
         const product = products.find(p => p.product_code.toUpperCase() === cleanCode);
 
         if (!product) return { success: false, error: 'Product not found' };
-        if (!product.barcode_enabled) return { success: false, error: 'Product is currently disabled' };
         if (product.stock <= 0) return { success: false, error: 'Out of stock' };
 
         const existingItemIndex = cart.findIndex(item => item.product_id === product.id);
         if (existingItemIndex > -1) {
             const newCart = [...cart];
             newCart[existingItemIndex].quantity += 1;
-            newCart[existingItemIndex].subtotal = Number(newCart[existingItemIndex].quantity) * Number(product.price);
             setCart(newCart);
         } else {
             setCart([...cart, {
                 product_id: product.id,
                 product_name: product.product_name,
                 price: Number(product.price),
-                quantity: 1,
-                subtotal: Number(product.price)
+                quantity: 1
             }]);
         }
         return { success: true };
@@ -159,7 +159,7 @@ export const StoreProvider = ({ children }) => {
         const newCart = cart.map(item => {
             if (item.product_id === productId) {
                 const newQty = Math.max(0, item.quantity + delta);
-                return { ...item, quantity: newQty, subtotal: newQty * Number(item.price) };
+                return { ...item, quantity: newQty };
             }
             return item;
         }).filter(item => item.quantity > 0);
@@ -169,32 +169,35 @@ export const StoreProvider = ({ children }) => {
     const checkout = async (customerName = 'Guest') => {
         if (cart.length === 0) return { success: false, error: 'Cart is empty' };
 
-        const totalAmount = cart.reduce((acc, item) => acc + item.subtotal, 0);
+        // SECTION 4: Final total calculation
+        const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
         try {
-            // Save order to Supabase with V1 initial status
+            // SECTION 5: Create REAL order
             const { data: order, error } = await supabase
                 .from('orders')
-                .insert({
-                    shop_id: currentShop.id,
-                    customer_name: customerName,
-                    total_amount: totalAmount,
-                    items: cart,
-                    status: STATUS.PENDING_PAYMENT
-                })
+                .insert([
+                    {
+                        shop_id: currentShop.id,
+                        customer_name: customerName,
+                        total_amount: totalAmount,
+                        items: cart,
+                        status: STATUS.PENDING_PAYMENT // 'pending_payment'
+                    }
+                ])
                 .select()
                 .single();
 
             if (error) throw error;
 
-            setCart([]); // Clear cart locally
+            setCart([]);
             setCurrentOrderId(order.id);
             setUser({ ...user, cart_status: 'checkout' });
 
-            return { success: true, orderId: order.id };
+            return { success: true, orderId: order.id, order };
         } catch (err) {
             console.error('Checkout failed:', err);
-            return { success: false, error: 'Payment processing failed. Please try again.' };
+            return { success: false, error: err.message };
         }
     };
 
@@ -209,8 +212,9 @@ export const StoreProvider = ({ children }) => {
 
             if (error) throw error;
 
-            // V1 Rule: Deduct stock ONLY when verified
+            // SECTION 8: Mark Verified logic
             if (newStatus === STATUS.VERIFIED) {
+                // Real stock deduction
                 const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
                 for (const item of items) {
                     const product = products.find(p => p.id === item.product_id);
@@ -221,15 +225,8 @@ export const StoreProvider = ({ children }) => {
                             .eq('id', product.id);
                     }
                 }
-                // Refresh products
-                const { data: freshProducts } = await supabase.from('products').select('*');
+                const { data: freshProducts } = await supabase.from('products').select('*').gt('stock', 0);
                 if (freshProducts) setProducts(freshProducts);
-            }
-
-            // Update local state if it matches current order
-            if (orderId === currentOrderId) {
-                // If exited, we might want to clear session eventually, 
-                // but for now just let the screens handle the state
             }
 
             return { success: true };
@@ -276,8 +273,8 @@ export const StoreProvider = ({ children }) => {
         return await updateOrderStatus(orderId, STATUS.VERIFIED);
     };
 
-    const cartTotal = cart.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0);
-    const cartCount = cart.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
+    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const cartCount = cart.reduce((sum, item) => sum + (item.quantity), 0);
 
     return (
         <StoreContext.Provider value={{
